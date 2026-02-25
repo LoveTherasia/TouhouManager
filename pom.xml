@@ -5,8 +5,8 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.thlauncher</groupId>
-    <artifactId>touhou-launcher</artifactId>
+    <groupId>com.thmanager</groupId>
+    <artifactId>touhou-thmanager</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -62,7 +62,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.thlauncher.Main</mainClass>
+                    <mainClass>com.thmanager.Main</mainClass>
                 </configuration>
             </plugin>
 
@@ -81,7 +81,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.thlauncher.Main</mainClass>
+                                    <mainClass>com.thmanager.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
