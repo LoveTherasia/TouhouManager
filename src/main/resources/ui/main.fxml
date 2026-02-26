@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="mainContainer" prefHeight="600.0" prefWidth="900.0"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.thmanager.ui.MainController"
+            stylesheets="@/styles/main.css">
+
+
+    <!-- 顶部工具栏 -->
+    <top>
+        <ToolBar>
+            <items>
+                <Button fx:id="settingsButton" text="⚙ 设置路径" />
+                <Separator orientation="VERTICAL" />
+                <Label text="东方Project 整数作管理器" style="-fx-font-weight: bold;" />
+                <Pane HBox.hgrow="ALWAYS" />
+                <Button text="?" onAction="#onExit" />
+            </items>
+        </ToolBar>
+    </top>
+
+    <!-- 左侧游戏列表 -->
+    <left>
+        <VBox spacing="10" style="-fx-background-color: #f5f5f5; -fx-padding: 10px;">
+            <Label text="游戏列表" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+            <ListView fx:id="gameListView" VBox.vgrow="ALWAYS" prefWidth="250" />
+            <Label text="● 已安装  ○ 未安装" style="-fx-font-size: 11px; -fx-text-fill: #666;" />
+        </VBox>
+    </left>
+
+    <!-- 右侧详情面板 -->
+    <center>
+        <VBox fx:id="detailPanel" spacing="15" style="-fx-padding: 20px;" visible="false">
+            <Label fx:id="titleLabel" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+
+            <Separator />
+
+            <Label fx:id="infoLabel" style="-fx-font-size: 14px; -fx-line-spacing: 5px;" />
+
+            <Separator />
+
+            <HBox spacing="10">
+                <Label fx:id="totalTimeLabel" style="-fx-font-size: 14px; -fx-text-fill: #2196F3;" />
+                <Label fx:id="lastPlayedLabel" style="-fx-font-size: 14px; -fx-text-fill: #666;" />
+            </HBox>
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <Button fx:id="launchButton" text="启动游戏" prefWidth="200" prefHeight="50"
+                    style="-fx-font-size: 16px; -fx-background-color: #4CAF50; -fx-text-fill: white;" />
+        </VBox>
+    </center>
+
+    <!-- 底部状态栏 -->
+    <bottom>
+        <HBox style="-fx-background-color: #e0e0e0; -fx-padding: 5px 10px;">
+            <Label text="就绪" />
+            <Pane HBox.hgrow="ALWAYS" />
+            <Label text="v0.2.0" />
+        </HBox>
+    </bottom>
+
+</BorderPane>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.thmanager.ui.SettingsController" prefWidth="700" prefHeight="500">
+
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <Label text="游戏路径设置" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+    <Label text="双击表格项或点击浏览按钮设置游戏安装路径" style="-fx-text-fill: #666;" />
+
+    <TableView fx:id="gameTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="numberColumn" text="编号" prefWidth="80" />
+            <TableColumn fx:id="nameColumn" text="游戏名称" prefWidth="200" />
+            <TableColumn fx:id="pathColumn" text="安装路径" prefWidth="300" />
+            <TableColumn fx:id="statusColumn" text="有效" prefWidth="60" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <Button text="🔍 自动检测" onAction="#onAutoDetect"
+                style="-fx-background-color: #2196F3; -fx-text-fill: white;" />
+        <Button text="📁 浏览..." onAction="#onBrowse" />
+        <Pane HBox.hgrow="ALWAYS" />
+        <Button text="保存" onAction="#onSave" defaultButton="true"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white;" />
+        <Button text="取消" onAction="#onCancel" cancelButton="true" />
+    </HBox>
+
+</VBox>

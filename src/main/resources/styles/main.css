@@ -1,0 +1,44 @@
+/* 主样式表 */
+.root {
+    -fx-font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+
+/* 列表视图样式 */
+.list-view {
+    -fx-background-color: white;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 4px;
+}
+
+.list-cell:hover {
+    -fx-background-color: #e3f2fd;
+}
+
+.list-cell:selected {
+    -fx-background-color: #2196F3;
+}
+
+.list-cell:selected .label {
+    -fx-text-fill: white;
+}
+
+/* 按钮样式 */
+.button {
+    -fx-cursor: hand;
+    -fx-background-radius: 4px;
+}
+
+.button:hover {
+    -fx-opacity: 0.9;
+}
+
+/* 工具栏 */
+.tool-bar {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #ddd transparent transparent transparent;
+}
+
+/* 详情面板 */
+#detailPanel {
+    -fx-background-color: white;
+}
