@@ -2,6 +2,7 @@ package com.thmanager.model;
 
 import lombok.Data;
 
+import java.io.File;
 import java.time.LocalDateTime;
 
 //游戏实体类
@@ -45,13 +46,29 @@ public class Game {
         }
     }
 
-    // 获取完整可执行文件路径
+    // 获取完整可执行文件路径（优先带c的exe）
     public String getFullExePath(){
-        if(installPath == null || installPath.isEmpty()){
+        if(installPath == null || installPath.isEmpty() || exeName == null || exeName.isEmpty()){
             return null;
-        }else{
+        }
+
+        // 步骤1：拼接带c的exe路径
+        // 拆分文件名和后缀
+        String[] exeNameParts = exeName.split("\\.(?=[^.]+$)"); // 正则拆分：保留最后一个点作为后缀分隔
+        if (exeNameParts.length != 2) { // 异常处理（防止exeName格式错误）
             return installPath + "\\" + exeName;
         }
+        String exeNameWithC = exeNameParts[0] + "c." + exeNameParts[1]; // 拼接带c的文件名
+        String exePathWithC = installPath + "\\" + exeNameWithC; // 带c的完整路径
+
+        // 检查带c的文件是否存在
+        File fileWithC = new File(exePathWithC);
+        if (fileWithC.exists() && fileWithC.isFile()) {
+            return exePathWithC; // 存在则返回带c的路径
+        }
+
+        // 步骤2：带c的不存在，返回原路径（你确认原路径一定存在）
+        return installPath + "\\" + exeName;
     }
 
     public int getId() { return id; }

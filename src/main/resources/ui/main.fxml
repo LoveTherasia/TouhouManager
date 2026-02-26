@@ -58,9 +58,9 @@
     <!-- 底部状态栏 -->
     <bottom>
         <HBox style="-fx-background-color: #e0e0e0; -fx-padding: 5px 10px;">
-            <Label text="就绪" />
+            <Label fx:id="statusLabel" text="就绪" />
             <Pane HBox.hgrow="ALWAYS" />
-            <Label text="v0.2.0" />
+            <Label text="v0.3.0" />
         </HBox>
     </bottom>
 

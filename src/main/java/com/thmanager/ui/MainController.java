@@ -2,6 +2,8 @@ package com.thmanager.ui;
 
 import com.thmanager.dao.GameDAO;
 import com.thmanager.model.Game;
+import com.thmanager.service.GameLauncher;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,37 +26,48 @@ import java.util.ResourceBundle;
 
 //UI总控制器类
 public class MainController implements Initializable {
-    @FXML
-    private BorderPane mainContainer;
-    @FXML
-    private ListView<Game> gameListView;
-    @FXML
-    private VBox detailPanel;
-    @FXML
-    private Label titleLabel;
-    @FXML
-    private Label infoLabel;
-    @FXML
-    private Button launchButton;
-    @FXML
-    private Button settingsButton;
-    @FXML
-    private Label totalTimeLabel;
-    @FXML
-    private Label lastPlayedLabel;
+    @FXML private BorderPane mainContainer;//主面板
+    @FXML private ListView<Game> gameListView;//游戏列表
+    @FXML private VBox detailPanel;//游戏详情面板
+    @FXML private Label titleLabel;//游戏标题
+    @FXML private Label infoLabel;//游戏信息
+    @FXML private Button launchButton;//启动按钮
+    @FXML private Button settingsButton;//设置按钮
+    @FXML private Label totalTimeLabel;//事件按钮
+    @FXML private Label lastPlayedLabel;//上次游玩时间
+    @FXML private Label statusLabel;//底部状态栏
 
     private GameDAO gameDAO;
+    private GameLauncher gameLauncher;
     private ObservableList<Game> games;
     private Game selectedGame;
+    private Timeline countdownTimeLine;
 
     @Override
     public void initialize(URL location, ResourceBundle resources){
         gameDAO = new GameDAO();
-        games = FXCollections.observableArrayList();
+        gameLauncher = new GameLauncher();
+
+        // 设置游戏启动回调
+        gameLauncher.setOnGameStart(() ->{
+            updateStatus("少女祈祷中...");
+            launchButton.setDisable(true);
+            launchButton.setText("运行中...");
+        });
+
+        // 设置游戏结束回调
+        gameLauncher.setOnGameEnd(() -> {
+            updateStatus("游戏已结束，数据已保存");
+            refreshGameList();
+            updateDetailPanel();
+            launchButton.setDisable(false);
+            launchButton.setText("启动游戏");
+        });
 
         setupGameList();
         loadGames();
         setupEventHandlers();
+        updateStatus("就绪");
     }
 
     private void setupGameList(){
@@ -83,7 +96,17 @@ public class MainController implements Initializable {
                         name.setStyle("-fx-font-size:14px;-fx-text-fill:#666;");
                     }
 
-                    cell.getChildren().addAll(status, name);
+                    //如果正在运行，显示指示器
+                    if(gameLauncher.isGameRunning() &&
+                       gameLauncher.getCurrentGame().isPresent() &&
+                       gameLauncher.getCurrentGame().get().getId() == game.getId())
+                    {
+                        Label running = new Label(" ▶");
+                        running.setStyle("-fx-text-fill: #f44336;");
+                        cell.getChildren().addAll(status, name, running);
+                    } else {
+                        cell.getChildren().addAll(status, name);
+                    }
                     setGraphic(cell);
                 }
             }
@@ -93,17 +116,22 @@ public class MainController implements Initializable {
         gameListView.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
                     selectedGame = newValue;
-                    updateDetailView();
+                    updateDetailPanel();
                 });
     }
 
     private void loadGames(){
-        games.clear();
-        games.addAll(gameDAO.findAll());
+        games = FXCollections.observableArrayList(gameDAO.findAll());
         gameListView.setItems(games);
     }
 
-    private void updateDetailView(){
+    private void refreshGameList(){
+        games.clear();
+        games.addAll(gameDAO.findAll());
+        gameListView.refresh();
+    }
+
+    private void updateDetailPanel(){
         if(selectedGame == null){
             detailPanel.setVisible(false);
             return ;
@@ -139,6 +167,20 @@ public class MainController implements Initializable {
             lastPlayedLabel.setVisible(false);
         }
 
+        //检查是否正在运行
+        boolean isRunning = gameLauncher.isGameRunning() &&
+                gameLauncher.getCurrentGame().isPresent() &&
+                gameLauncher.getCurrentGame().get().getId() == selectedGame.getId();
+
+        launchButton.setDisable(!selectedGame.isInstalled()||
+                (gameLauncher.isGameRunning() && !isRunning));
+
+        if(isRunning){
+            launchButton.setText("运行中...");
+        }else{
+            launchButton.setText(selectedGame.isInstalled() ? "启动游戏" : "未安装");
+        }
+
         //启动按钮
         launchButton.setDisable(!selectedGame.isInstalled());
         launchButton.setText(selectedGame.isInstalled() ? "启动游戏" : "未安装");
@@ -159,6 +201,27 @@ public class MainController implements Initializable {
         });
     }
 
+    //带倒计时的启动
+    private void startGameWithCountdown(){
+        if(selectedGame == null || !selectedGame.isInstalled()) return;
+
+        //倒计时
+        launchButton.setDisable(true);
+
+        gameLauncher.launchWithCountdown(selectedGame,3,new GameLauncher.CountdownCallback(){
+            @Override
+            public void onTick(int seconds){
+                launchButton.setText("启动中..." + seconds);
+                updateStatus("游戏将在" + seconds +"秒后启动");
+            }
+
+            @Override
+            public void onFinish(){
+
+            }
+        });
+    }
+
     private void launchGame(){
         if(selectedGame == null || !selectedGame.isInstalled()){
             return ;
@@ -169,6 +232,9 @@ public class MainController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText("即将启动:" + selectedGame.getDisplayName() + "\n路径:" + selectedGame.getFullExePath());
         alert.showAndWait();
+
+        //关键：调用倒计时启动方法
+        startGameWithCountdown();
     }
 
     private void openSettings(){
@@ -191,6 +257,12 @@ public class MainController implements Initializable {
             dialogStage.showAndWait();
         }catch(IOException e){
             showError("无法打开设置",e.getMessage());
+        }
+    }
+
+    private void updateStatus(String text){
+        if(statusLabel != null){
+            statusLabel.setText(text);
         }
     }
 
