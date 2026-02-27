@@ -28,7 +28,7 @@ public class GameDAO {
     }
 
     public Optional<Game> findById(int id){
-        String sql = "SELECT * FROM games WHERE game_number = ?";
+        String sql = "SELECT * FROM games WHERE id = ?";
 
         try(Connection conn = DatabaseManager.getInstance().getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sql)){

@@ -128,7 +128,9 @@ public class GameLauncher {
 
         //更新游戏总时长
         long totalTime = sessionDAO.getToTotalPlayTimeByGame(currentGame.getId());
+        System.out.println("游戏总时长");
         currentGame.setTotalPlayTimeSeconds(totalTime);
+        currentGame.setLastPlayed(LocalDateTime.now());
         currentGame.setInstalled(true);
         gameDAO.update(currentGame);
 
