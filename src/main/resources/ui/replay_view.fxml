@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.thmanager.ui.ReplayController" style="-fx-padding: 15px;">
+
+    <!-- 工具栏 - 优化按钮宽度和布局 -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="筛选：" style="-fx-font-weight: bold;" />
+        <ComboBox fx:id="gameFilter" prefWidth="150" promptText="游戏" />
+        <ComboBox fx:id="difficultyFilter" prefWidth="80" />
+        <TextField fx:id="searchField" prefWidth="200" promptText="搜索机体、文件名..." />
+        <!-- 占满剩余空间，保障按钮不被挤压 -->
+        <Pane HBox.hgrow="ALWAYS" />
+        <!-- 刷新按钮：设置固定宽度，避免文字截断 -->
+        <Button fx:id="refreshButton" text="刷新" prefWidth="80" />
+        <!-- 播放按钮：1. 替换特殊字符为文字 2. 设置固定宽度 3. 优化样式 -->
+        <Button fx:id="playButton" text="播放" disable="true"
+                prefWidth="80"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;" />
+    </HBox>
+
+    <!-- 表格 -->
+    <TableView fx:id="replayTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="gameColumn" text="游戏" prefWidth="150" />
+            <TableColumn fx:id="dateColumn" text="日期" prefWidth="100" />
+            <TableColumn fx:id="difficultyColumn" text="难度" prefWidth="60" />
+            <TableColumn fx:id="shotColumn" text="机体" prefWidth="100" />
+            <TableColumn fx:id="scoreColumn" text="分数" prefWidth="120" />
+            <TableColumn fx:id="stageColumn" text="进度" prefWidth="100" />
+        </columns>
+        <placeholder>
+            <Label text="暂无replay数据，点击刷新扫描" />
+        </placeholder>
+    </TableView>
+
+    <!-- 状态栏 -->
+    <HBox alignment="CENTER_LEFT" style="-fx-padding: 5px 0;">
+        <Label fx:id="countLabel" text="0 个replay" />
+        <Pane HBox.hgrow="ALWAYS" />
+        <Label text="双击replay直接播放" style="-fx-text-fill: #666; -fx-font-size: 11px;" />
+    </HBox>
+
+</VBox>

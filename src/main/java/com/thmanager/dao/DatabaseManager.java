@@ -16,88 +16,88 @@ public class DatabaseManager {
         initializeDatabase();
     }
 
-    public static synchronized DatabaseManager getInstance(){
-        if(instance == null){
+    public static synchronized DatabaseManager getInstance() {
+        if (instance == null) {
             instance = new DatabaseManager();
         }
         return instance;
     }
 
-    //获取数据库文件路径
-    private String getDatabasePath(){
+    // 获取数据库文件路径
+    private String getDatabasePath() {
         String userHome = System.getProperty("user.home");
         Path appDir = Paths.get(userHome, ".touhou-manager");
 
-        try{
-            if(!Files.exists(appDir)){
+        try {
+            if (!Files.exists(appDir)) {
                 Files.createDirectories(appDir);
             }
-        }catch(IOException e){
-            System.err.println("无法创建目标目录" + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Failed to create target directory: " + e.getMessage());
             return DB_NAME;
         }
 
         return appDir.resolve(DB_NAME).toString();
     }
 
-    private void initializeDatabase(){
+    private void initializeDatabase() {
         String dbPath = getDatabasePath();
         dbUrl = "jdbc:sqlite:" + dbPath;
 
-        System.out.println("数据库路径" + dbPath);
+        System.out.println("Database path: " + dbPath);
 
-        //加载驱动并初始化表结构
-        try(Connection conn = getConnection()){
-            if(conn != null){
-                System.out.println("数据库连接成功");
+        // 加载驱动并初始化表结构
+        try (Connection conn = getConnection()) {
+            if (conn != null) {
+                System.out.println("Database connection successful");
                 executeInitScript(conn);
             }
-        }catch (SQLException e){
-            System.out.println("数据库初始失败" + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Failed to initialize database: " + e.getMessage());
         }
     }
 
-    public Connection getConnection() throws SQLException{
+    public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(dbUrl);
     }
 
-    //执行初始化脚本
-    private void executeInitScript(Connection conn){
-        try{
-            //从resources中读取SQL文件
+    // 执行初始化脚本
+    private void executeInitScript(Connection conn) {
+        try {
+            // 从resources中读取SQL文件
             InputStream is = getClass().getResourceAsStream("/database/init.sql");
-            if(is == null){
-                System.err.println("找不到初始文件!,请检查resources/database/init.sql文件是否存在");
-                return ;
+            if (is == null) {
+                System.err.println("Initialization file not found! Please check if resources/database/init.sql exists");
+                return;
             }
 
             String sql = new String(is.readAllBytes(),
                     StandardCharsets.UTF_8);
 
-            //分割多条SQL语句执行
+            // 分割多条SQL语句执行
             String[] statements = sql.split(";");
 
-            for(String stmt : statements){
+            for (String stmt : statements) {
                 String trimmed = stmt.trim();
-                if(!trimmed.isEmpty()){
-                    try(Statement s = conn.createStatement()){
-                        //System.out.println(stmt.trim());
+                if (!trimmed.isEmpty()) {
+                    try (Statement s = conn.createStatement()) {
+                        // System.out.println(stmt.trim());
                         s.execute(trimmed);
                     }
                 }
             }
 
-            System.out.println("数据库初始化成功");
-        }catch(Exception e){
-            System.err.println("初始化脚本运行失败" + e.getMessage());
+            System.out.println("Database initialization successful");
+        } catch (Exception e) {
+            System.err.println("Failed to run initialization script: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     public boolean testConnection() {
-        try(Connection conn = getConnection()){
+        try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();
-        }catch(SQLException e){
+        } catch (SQLException e) {
             return false;
         }
     }

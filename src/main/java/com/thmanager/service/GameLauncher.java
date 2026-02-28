@@ -75,7 +75,7 @@ public class GameLauncher {
 
             ProcessBuilder pb = new ProcessBuilder(exePath);
             pb.directory(WorkingDir.toFile());
-            pb.inheritIO();//继承ID
+            pb.inheritIO();//继承IO
 
             currentProcess = pb.start();
             currentGame = game;
@@ -93,7 +93,7 @@ public class GameLauncher {
             startMonitoring();
 
         }catch(IOException e){
-            throw new RuntimeException("启动游戏失败" + e.getMessage(),e);
+            throw new RuntimeException("fail to launch game" + e.getMessage(),e);
         }
     }
 
@@ -106,6 +106,7 @@ public class GameLauncher {
 
                 //游戏结束，更新记录
                 endCurrentSession();
+                System.out.println("The game is over");
             }catch(InterruptedException e){
                 Thread.currentThread().interrupt();
             }
@@ -128,7 +129,7 @@ public class GameLauncher {
 
         //更新游戏总时长
         long totalTime = sessionDAO.getToTotalPlayTimeByGame(currentGame.getId());
-        System.out.println("游戏总时长");
+        System.out.println("Total play time: " + totalTime);
         currentGame.setTotalPlayTimeSeconds(totalTime);
         currentGame.setLastPlayed(LocalDateTime.now());
         currentGame.setInstalled(true);
