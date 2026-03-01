@@ -38,8 +38,8 @@ public class ReplayScanner {
 
         // 按日期降序排序
         allReplays.sort((a, b) -> {
-            if (a.getDate() == null || b.getDate() == null) return 0;
-            return b.getDate().compareTo(a.getDate());
+            if (a.getGameDate() == null || b.getGameDate() == null) return 0;
+            return b.getGameDate().compareTo(a.getGameDate());
         });
 
         return allReplays;
@@ -66,7 +66,7 @@ public class ReplayScanner {
 
                 for (Path rpy : rpyFiles) {
                     System.out.println("Replay file: " + rpy);
-                    Optional<Replay> replay = parser.parse(rpy);
+                    Optional<Replay> replay = parser.parse(rpy,game.getId());
                     if (replay.isPresent()) {
                         Replay r = replay.get();
                         r.setGameId(game.getId());

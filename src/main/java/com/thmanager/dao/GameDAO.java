@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+//游戏信息管理器
 public class GameDAO {
     // 查询所有游戏
     public List<Game> findAll() {

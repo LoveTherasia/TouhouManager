@@ -1,44 +1,88 @@
 package com.thmanager.model;
 
-import java.util.List;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
-//回放实体类
 public class Replay {
-    private int id;//数据库id
-    private int gameId;//关联游戏Id
-    private String fileName;//文件名
-    private String filePath;//完整路径
-    private long fileSize;//文件大小
 
-    //从.rpy文件解析的信息
-    private String gameVersion;//游戏版本
-    private String difficulty;//游戏难度
-    private String shotType;//机体
-    private long score;//分数
-    private LocalDateTime date;//游玩日期
-    private String stage;//到达面数
+    // 数据库基础字段
+    private int id;
+    private int gameId;
+    private String fileName;
+    private String filePath;
+    private long fileSize;
+    private LocalDateTime importedAt;
+    private Integer sessionId;
+
+    // 游戏信息字段
+    private String gameVersion;
+    private String character;
+    private String shotType;
+    private String difficulty;
+    private String stage;
+    private boolean cleared;
+    private long totalScore;
+    private LocalDateTime gameDate;
+    private String playerName;
     private float slowRate;
-    private String playerName;//玩家名
-    private int frameCount;        // 新增：总帧数
-    private String rawJson;        // 新增：原始JSON数据
+    private int totalFrames;
 
+    // 深度统计字段（JSON存储）
+    private String stageScoresJson;
+    private String bombStatsJson;
+    private int totalZBombs;
+    private int totalXBombs;
+    private int totalCBombs;
+
+    // 原始数据备份
+    private String rawJson;
+
+    // 显示用临时字段（非数据库）
     private String gameTitle;
+    private List<Long> stageScoresList;
+    private List<StageBombStats> bombStatsList;
 
-    // 错误信息（解析过程中发现的问题）
+    // 错误信息
     private List<String> errors = new ArrayList<>();
 
-    public Replay(){}
+    public Replay() {}
 
-    //格式化分数显示
-    public String getFormattedScore(){
-        return String.format("%,d",score);
+    public void addError(String error) {
+        this.errors.add(error);
     }
 
-    // 获取难度显示（带颜色代码，供UI使用）
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
+
+    public List<String> getErrors() {
+        return new ArrayList<>(errors);
+    }
+
+    // ========== 业务方法（新增！）==========
+
+    /**
+     * 获取显示用的完整机体名
+     */
+    public String getFullShotType() {
+        if (character == null) return "Unknown";
+        if (shotType == null || shotType.isEmpty()) return character;
+        return character + " " + shotType;
+    }
+
+    /**
+     * 格式化分数显示
+     */
+    public String getFormattedScore() {
+        return String.format("%,d", totalScore);
+    }
+
+    /**
+     * 获取难度简写（新增！）
+     */
     public String getDifficultyDisplay() {
-        if (difficulty == null) return "Unknown";
+        if (difficulty == null) return "?";
         return switch (difficulty.toUpperCase()) {
             case "EASY" -> "E";
             case "NORMAL" -> "N";
@@ -46,11 +90,51 @@ public class Replay {
             case "LUNATIC" -> "L";
             case "EXTRA" -> "Ex";
             case "PHANTASM" -> "Ph";
-            default -> difficulty;
+            default -> difficulty.substring(0, Math.min(1, difficulty.length()));
         };
     }
 
-    // Getters and Setters
+    /**
+     * 获取到达面数字
+     */
+    public int getReachedStageNumber() {
+        if (stage == null) return 0;
+        String num = stage.replaceAll("[^0-9]", "");
+        if (!num.isEmpty()) {
+            try {
+                return Integer.parseInt(num);
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+        if (stage.contains("Extra")) return 7;
+        if (stage.contains("Phantasm")) return 8;
+        if (stage.contains("All") || stage.contains("Clear")) return 99;
+        return 0;
+    }
+
+    /**
+     * 计算某面的分数
+     */
+    public long getStageScore(int stageNum) {
+        if (stageScoresList == null || stageNum < 1 || stageNum > stageScoresList.size()) {
+            return 0;
+        }
+        return stageScoresList.get(stageNum - 1);
+    }
+
+    /**
+     * 计算某面的炸弹使用次数
+     */
+    public int getStageBombCount(int stageNum) {
+        if (bombStatsList == null || stageNum < 1 || stageNum > bombStatsList.size()) {
+            return 0;
+        }
+        return bombStatsList.get(stageNum - 1).xCount;
+    }
+
+    // ========== Getters and Setters ==========
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -66,63 +150,104 @@ public class Replay {
     public long getFileSize() { return fileSize; }
     public void setFileSize(long fileSize) { this.fileSize = fileSize; }
 
+    public LocalDateTime getImportedAt() { return importedAt; }
+    public void setImportedAt(LocalDateTime importedAt) { this.importedAt = importedAt; }
+
+    public Integer getSessionId() { return sessionId; }
+    public void setSessionId(Integer sessionId) { this.sessionId = sessionId; }
+
     public String getGameVersion() { return gameVersion; }
     public void setGameVersion(String gameVersion) { this.gameVersion = gameVersion; }
 
-    public String getDifficulty() { return difficulty; }
-    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+    public String getCharacter() { return character; }
+    public void setCharacter(String character) { this.character = character; }
 
     public String getShotType() { return shotType; }
     public void setShotType(String shotType) { this.shotType = shotType; }
 
-    public long getScore() { return score; }
-    public void setScore(long score) { this.score = score; }
-
-    public LocalDateTime getDate() { return date; }
-    public void setDate(LocalDateTime date) { this.date = date; }
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
 
     public String getStage() { return stage; }
     public void setStage(String stage) { this.stage = stage; }
 
-    public float getSlowRate() { return slowRate; }
-    public void setSlowRate(float slowRate) { this.slowRate = slowRate; }
+    public boolean isCleared() { return cleared; }
+    public void setCleared(boolean cleared) { this.cleared = cleared; }
+
+    public long getTotalScore() { return totalScore; }
+    public void setTotalScore(long totalScore) { this.totalScore = totalScore; }
+
+    public LocalDateTime getGameDate() { return gameDate; }
+    public void setGameDate(LocalDateTime gameDate) { this.gameDate = gameDate; }
 
     public String getPlayerName() { return playerName; }
     public void setPlayerName(String playerName) { this.playerName = playerName; }
 
-    public String getGameTitle() { return gameTitle; }
-    public void setGameTitle(String gameTitle) { this.gameTitle = gameTitle; }
+    public float getSlowRate() { return slowRate; }
+    public void setSlowRate(float slowRate) { this.slowRate = slowRate; }
 
-    // 新增：frameCount 的 getter 和 setter
-    public int getFrameCount() { return frameCount; }
-    public void setFrameCount(int frameCount) { this.frameCount = frameCount; }
+    public int getTotalFrames() { return totalFrames; }
+    public void setTotalFrames(int totalFrames) { this.totalFrames = totalFrames; }
 
-    // 新增：rawJson 的 getter 和 setter
+    public String getStageScoresJson() { return stageScoresJson; }
+    public void setStageScoresJson(String stageScoresJson) {
+        this.stageScoresJson = stageScoresJson;
+        if (stageScoresJson != null && !stageScoresJson.isEmpty()) {
+            try {
+                this.stageScoresList = new ArrayList<>();
+                String clean = stageScoresJson.replace("[", "").replace("]", "").trim();
+                if (!clean.isEmpty()) {
+                    String[] parts = clean.split(",");
+                    for (String part : parts) {
+                        this.stageScoresList.add(Long.parseLong(part.trim()));
+                    }
+                }
+            } catch (Exception e) {
+                this.stageScoresList = null;
+            }
+        }
+    }
+
+    public String getBombStatsJson() { return bombStatsJson; }
+    public void setBombStatsJson(String bombStatsJson) { this.bombStatsJson = bombStatsJson; }
+
+    public int getTotalZBombs() { return totalZBombs; }
+    public void setTotalZBombs(int totalZBombs) { this.totalZBombs = totalZBombs; }
+
+    public int getTotalXBombs() { return totalXBombs; }
+    public void setTotalXBombs(int totalXBombs) { this.totalXBombs = totalXBombs; }
+
+    public int getTotalCBombs() { return totalCBombs; }
+    public void setTotalCBombs(int totalCBombs) { this.totalCBombs = totalCBombs; }
+
     public String getRawJson() { return rawJson; }
     public void setRawJson(String rawJson) { this.rawJson = rawJson; }
 
-    // ========== 错误信息相关方法 ==========
-    // addError方法，解决解析失败问题
-    public void addError(String errorMsg) {
-        this.errors.add(errorMsg);
-    }
+    public String getGameTitle() { return gameTitle; }
+    public void setGameTitle(String gameTitle) { this.gameTitle = gameTitle; }
 
-    // 获取所有错误信息
-    public List<String> getErrors() {
-        return new ArrayList<>(this.errors); // 返回副本，避免外部修改
-    }
+    public List<Long> getStageScoresList() { return stageScoresList; }
+    public void setStageScoresList(List<Long> stageScoresList) { this.stageScoresList = stageScoresList; }
 
-    // 判断是否有解析错误
-    public boolean hasErrors() {
-        return !this.errors.isEmpty();
-    }
+    public List<StageBombStats> getBombStatsList() { return bombStatsList; }
+    public void setBombStatsList(List<StageBombStats> bombStatsList) { this.bombStatsList = bombStatsList; }
 
     @Override
     public String toString() {
-        return String.format("%s %s %s %s",
+        return String.format("%s %s %s %s %s",
                 gameTitle != null ? gameTitle : "Unknown",
-                shotType != null ? shotType : "?",
+                getFullShotType(),
                 getDifficultyDisplay(),
-                getFormattedScore());
+                getFormattedScore(),
+                cleared ? "✓" : "");
+    }
+
+    // 内部类：每面炸弹统计
+    public static class StageBombStats {
+        public int stageNum;
+        public int zCount;
+        public int xCount;
+        public int startFrame;
+        public int endFrame;
     }
 }

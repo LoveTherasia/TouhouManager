@@ -47,3 +47,43 @@ INSERT OR IGNORE INTO games (game_number, title_ja, title_zh, title_en, exe_name
 (17, '東方鬼形獣', '东方鬼形兽', 'WBaWC', 'th17.exe'),
 (18, '東方虹龍洞', '东方虹龙洞', 'UM', 'th18.exe'),
 (19, '東方獣王園', '东方兽王园', 'UDoALG', 'th19.exe');
+
+
+-- Replay数据表（完整版）
+CREATE TABLE IF NOT EXISTS replays (
+                                       id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                       game_id INTEGER NOT NULL,
+                                       file_name TEXT NOT NULL,
+                                       file_path TEXT NOT NULL UNIQUE,
+                                       file_size INTEGER,
+
+                                       game_version TEXT,
+                                       character TEXT,
+                                       shot_type TEXT,
+                                       difficulty TEXT,
+                                       stage TEXT,
+                                       cleared BOOLEAN DEFAULT 0,
+                                       total_score INTEGER DEFAULT 0,
+                                       game_date TIMESTAMP,
+                                       player_name TEXT,
+                                       slow_rate REAL,
+                                       total_frames INTEGER,
+
+                                       stage_scores_json TEXT,
+                                       bomb_stats_json TEXT,
+                                       total_z_bombs INTEGER DEFAULT 0,
+                                       total_x_bombs INTEGER DEFAULT 0,
+                                       total_c_bombs INTEGER DEFAULT 0,
+
+                                       raw_json TEXT,
+
+                                       session_id INTEGER,
+                                       imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                                       FOREIGN KEY (game_id) REFERENCES games(id),
+    FOREIGN KEY (session_id) REFERENCES play_sessions(id)
+    );
+
+CREATE INDEX IF NOT EXISTS idx_replays_game_difficulty ON replays(game_id, difficulty);
+CREATE INDEX IF NOT EXISTS idx_replays_game_shot ON replays(game_id, shot_type);
+CREATE INDEX IF NOT EXISTS idx_replays_score ON replays(game_id, difficulty, total_score DESC);

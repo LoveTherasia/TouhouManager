@@ -8,6 +8,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
+//游戏会话管理器
 public class PlaySessionDAO {
 
     public boolean create(PlaySession session) {

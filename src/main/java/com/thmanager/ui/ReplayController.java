@@ -50,8 +50,8 @@ public class ReplayController implements Initializable {
         gameColumn.setCellValueFactory(new PropertyValueFactory<>("gameTitle"));
         dateColumn.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
-                        data.getValue().getDate() != null ?
-                                data.getValue().getDate().toLocalDate().toString() : "Unknown"
+                        data.getValue().getGameDate() != null ?
+                                data.getValue().getGameDate().toLocalDate().toString() : "Unknown"
                 ));
         difficultyColumn.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty(
