@@ -33,7 +33,7 @@ public class DatabaseManager {
                 Files.createDirectories(appDir);
             }
         } catch (IOException e) {
-            System.err.println("Failed to create target directory: " + e.getMessage());
+            System.err.println("无法创建目标目录" + e.getMessage());
             return DB_NAME;
         }
 
@@ -51,6 +51,7 @@ public class DatabaseManager {
             if (conn != null) {
                 System.out.println("Database connection successful");
                 executeInitScript(conn);
+                executeMigrationScript(conn);
             }
         } catch (SQLException e) {
             System.out.println("Failed to initialize database: " + e.getMessage());
@@ -67,7 +68,7 @@ public class DatabaseManager {
             // 从resources中读取SQL文件
             InputStream is = getClass().getResourceAsStream("/database/init.sql");
             if (is == null) {
-                System.err.println("Initialization file not found! Please check if resources/database/init.sql exists");
+                System.err.println("找不到初始文件!,请检查resources/database/init.sql文件是否存在");
                 return;
             }
 
@@ -90,6 +91,43 @@ public class DatabaseManager {
             System.out.println("Database initialization successful");
         } catch (Exception e) {
             System.err.println("Failed to run initialization script: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // 执行迁移脚本
+    private void executeMigrationScript(Connection conn) {
+        try {
+            // 检查file_modified_time列是否已存在
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet columns = metaData.getColumns(null, null, "replays", "file_modified_time");
+
+            if (!columns.next()) {
+                // 列不存在，执行迁移
+                System.out.println("Executing database migration: adding file_modified_time column");
+
+                InputStream is = getClass().getResourceAsStream("/database/migration_add_file_modified_time.sql");
+                if (is == null) {
+                    System.err.println("Migration script not found");
+                    return;
+                }
+
+                String sql = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+                try (Statement s = conn.createStatement()) {
+                    s.execute(sql);
+                    System.out.println("Database migration successful");
+                }
+            } else {
+                System.out.println("Database migration already applied");
+            }
+        } catch (SQLException e) {
+            // 如果列已存在，会抛出异常，这是正常的
+            if (!e.getMessage().contains("duplicate column name")) {
+                System.err.println("Migration error: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to run migration script: " + e.getMessage());
             e.printStackTrace();
         }
     }

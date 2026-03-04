@@ -12,6 +12,7 @@ public class Replay {
     private String fileName;
     private String filePath;
     private long fileSize;
+    private long fileModifiedTime;
     private LocalDateTime importedAt;
     private Integer sessionId;
 
@@ -46,7 +47,8 @@ public class Replay {
     // 错误信息
     private List<String> errors = new ArrayList<>();
 
-    public Replay() {}
+    public Replay() {
+    }
 
     public void addError(String error) {
         this.errors.add(error);
@@ -66,8 +68,10 @@ public class Replay {
      * 获取显示用的完整机体名
      */
     public String getFullShotType() {
-        if (character == null) return "Unknown";
-        if (shotType == null || shotType.isEmpty()) return character;
+        if (character == null)
+            return "Unknown";
+        if (shotType == null || shotType.isEmpty())
+            return character;
         return character + " " + shotType;
     }
 
@@ -82,7 +86,8 @@ public class Replay {
      * 获取难度简写（新增！）
      */
     public String getDifficultyDisplay() {
-        if (difficulty == null) return "?";
+        if (difficulty == null)
+            return "?";
         return switch (difficulty.toUpperCase()) {
             case "EASY" -> "E";
             case "NORMAL" -> "N";
@@ -98,7 +103,8 @@ public class Replay {
      * 获取到达面数字
      */
     public int getReachedStageNumber() {
-        if (stage == null) return 0;
+        if (stage == null)
+            return 0;
         String num = stage.replaceAll("[^0-9]", "");
         if (!num.isEmpty()) {
             try {
@@ -107,9 +113,12 @@ public class Replay {
                 return 0;
             }
         }
-        if (stage.contains("Extra")) return 7;
-        if (stage.contains("Phantasm")) return 8;
-        if (stage.contains("All") || stage.contains("Clear")) return 99;
+        if (stage.contains("Extra"))
+            return 7;
+        if (stage.contains("Phantasm"))
+            return 8;
+        if (stage.contains("All") || stage.contains("Clear"))
+            return 99;
         return 0;
     }
 
@@ -135,61 +144,162 @@ public class Replay {
 
     // ========== Getters and Setters ==========
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getId() {
+        return id;
+    }
 
-    public int getGameId() { return gameId; }
-    public void setGameId(int gameId) { this.gameId = gameId; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public String getFileName() { return fileName; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
+    public int getGameId() {
+        return gameId;
+    }
 
-    public String getFilePath() { return filePath; }
-    public void setFilePath(String filePath) { this.filePath = filePath; }
+    public void setGameId(int gameId) {
+        this.gameId = gameId;
+    }
 
-    public long getFileSize() { return fileSize; }
-    public void setFileSize(long fileSize) { this.fileSize = fileSize; }
+    public String getFileName() {
+        return fileName;
+    }
 
-    public LocalDateTime getImportedAt() { return importedAt; }
-    public void setImportedAt(LocalDateTime importedAt) { this.importedAt = importedAt; }
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
-    public Integer getSessionId() { return sessionId; }
-    public void setSessionId(Integer sessionId) { this.sessionId = sessionId; }
+    public String getFilePath() {
+        return filePath;
+    }
 
-    public String getGameVersion() { return gameVersion; }
-    public void setGameVersion(String gameVersion) { this.gameVersion = gameVersion; }
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
 
-    public String getCharacter() { return character; }
-    public void setCharacter(String character) { this.character = character; }
+    public long getFileSize() {
+        return fileSize;
+    }
 
-    public String getShotType() { return shotType; }
-    public void setShotType(String shotType) { this.shotType = shotType; }
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
+    }
 
-    public String getDifficulty() { return difficulty; }
-    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+    public long getFileModifiedTime() {
+        return fileModifiedTime;
+    }
 
-    public String getStage() { return stage; }
-    public void setStage(String stage) { this.stage = stage; }
+    public void setFileModifiedTime(long fileModifiedTime) {
+        this.fileModifiedTime = fileModifiedTime;
+    }
 
-    public boolean isCleared() { return cleared; }
-    public void setCleared(boolean cleared) { this.cleared = cleared; }
+    public LocalDateTime getImportedAt() {
+        return importedAt;
+    }
 
-    public long getTotalScore() { return totalScore; }
-    public void setTotalScore(long totalScore) { this.totalScore = totalScore; }
+    public void setImportedAt(LocalDateTime importedAt) {
+        this.importedAt = importedAt;
+    }
 
-    public LocalDateTime getGameDate() { return gameDate; }
-    public void setGameDate(LocalDateTime gameDate) { this.gameDate = gameDate; }
+    public Integer getSessionId() {
+        return sessionId;
+    }
 
-    public String getPlayerName() { return playerName; }
-    public void setPlayerName(String playerName) { this.playerName = playerName; }
+    public void setSessionId(Integer sessionId) {
+        this.sessionId = sessionId;
+    }
 
-    public float getSlowRate() { return slowRate; }
-    public void setSlowRate(float slowRate) { this.slowRate = slowRate; }
+    public String getGameVersion() {
+        return gameVersion;
+    }
 
-    public int getTotalFrames() { return totalFrames; }
-    public void setTotalFrames(int totalFrames) { this.totalFrames = totalFrames; }
+    public void setGameVersion(String gameVersion) {
+        this.gameVersion = gameVersion;
+    }
 
-    public String getStageScoresJson() { return stageScoresJson; }
+    public String getCharacter() {
+        return character;
+    }
+
+    public void setCharacter(String character) {
+        this.character = character;
+    }
+
+    public String getShotType() {
+        return shotType;
+    }
+
+    public void setShotType(String shotType) {
+        this.shotType = shotType;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public String getStage() {
+        return stage;
+    }
+
+    public void setStage(String stage) {
+        this.stage = stage;
+    }
+
+    public boolean isCleared() {
+        return cleared;
+    }
+
+    public void setCleared(boolean cleared) {
+        this.cleared = cleared;
+    }
+
+    public long getTotalScore() {
+        return totalScore;
+    }
+
+    public void setTotalScore(long totalScore) {
+        this.totalScore = totalScore;
+    }
+
+    public LocalDateTime getGameDate() {
+        return gameDate;
+    }
+
+    public void setGameDate(LocalDateTime gameDate) {
+        this.gameDate = gameDate;
+    }
+
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
+    }
+
+    public float getSlowRate() {
+        return slowRate;
+    }
+
+    public void setSlowRate(float slowRate) {
+        this.slowRate = slowRate;
+    }
+
+    public int getTotalFrames() {
+        return totalFrames;
+    }
+
+    public void setTotalFrames(int totalFrames) {
+        this.totalFrames = totalFrames;
+    }
+
+    public String getStageScoresJson() {
+        return stageScoresJson;
+    }
+
     public void setStageScoresJson(String stageScoresJson) {
         this.stageScoresJson = stageScoresJson;
         if (stageScoresJson != null && !stageScoresJson.isEmpty()) {
@@ -208,29 +318,69 @@ public class Replay {
         }
     }
 
-    public String getBombStatsJson() { return bombStatsJson; }
-    public void setBombStatsJson(String bombStatsJson) { this.bombStatsJson = bombStatsJson; }
+    public String getBombStatsJson() {
+        return bombStatsJson;
+    }
 
-    public int getTotalZBombs() { return totalZBombs; }
-    public void setTotalZBombs(int totalZBombs) { this.totalZBombs = totalZBombs; }
+    public void setBombStatsJson(String bombStatsJson) {
+        this.bombStatsJson = bombStatsJson;
+    }
 
-    public int getTotalXBombs() { return totalXBombs; }
-    public void setTotalXBombs(int totalXBombs) { this.totalXBombs = totalXBombs; }
+    public int getTotalZBombs() {
+        return totalZBombs;
+    }
 
-    public int getTotalCBombs() { return totalCBombs; }
-    public void setTotalCBombs(int totalCBombs) { this.totalCBombs = totalCBombs; }
+    public void setTotalZBombs(int totalZBombs) {
+        this.totalZBombs = totalZBombs;
+    }
 
-    public String getRawJson() { return rawJson; }
-    public void setRawJson(String rawJson) { this.rawJson = rawJson; }
+    public int getTotalXBombs() {
+        return totalXBombs;
+    }
 
-    public String getGameTitle() { return gameTitle; }
-    public void setGameTitle(String gameTitle) { this.gameTitle = gameTitle; }
+    public void setTotalXBombs(int totalXBombs) {
+        this.totalXBombs = totalXBombs;
+    }
 
-    public List<Long> getStageScoresList() { return stageScoresList; }
-    public void setStageScoresList(List<Long> stageScoresList) { this.stageScoresList = stageScoresList; }
+    public int getTotalCBombs() {
+        return totalCBombs;
+    }
 
-    public List<StageBombStats> getBombStatsList() { return bombStatsList; }
-    public void setBombStatsList(List<StageBombStats> bombStatsList) { this.bombStatsList = bombStatsList; }
+    public void setTotalCBombs(int totalCBombs) {
+        this.totalCBombs = totalCBombs;
+    }
+
+    public String getRawJson() {
+        return rawJson;
+    }
+
+    public void setRawJson(String rawJson) {
+        this.rawJson = rawJson;
+    }
+
+    public String getGameTitle() {
+        return gameTitle;
+    }
+
+    public void setGameTitle(String gameTitle) {
+        this.gameTitle = gameTitle;
+    }
+
+    public List<Long> getStageScoresList() {
+        return stageScoresList;
+    }
+
+    public void setStageScoresList(List<Long> stageScoresList) {
+        this.stageScoresList = stageScoresList;
+    }
+
+    public List<StageBombStats> getBombStatsList() {
+        return bombStatsList;
+    }
+
+    public void setBombStatsList(List<StageBombStats> bombStatsList) {
+        this.bombStatsList = bombStatsList;
+    }
 
     @Override
     public String toString() {

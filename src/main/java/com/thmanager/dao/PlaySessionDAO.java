@@ -1,6 +1,7 @@
 package com.thmanager.dao;
 
 import com.thmanager.model.PlaySession;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,7 +9,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-//游戏会话管理器
+@Repository
 public class PlaySessionDAO {
 
     public boolean create(PlaySession session) {

@@ -1,13 +1,14 @@
 package com.thmanager.dao;
 
 import com.thmanager.model.Game;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-//游戏信息管理器
+@Repository
 public class GameDAO {
     // 查询所有游戏
     public List<Game> findAll() {

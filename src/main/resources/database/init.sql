@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS replays (
                                        file_name TEXT NOT NULL,
                                        file_path TEXT NOT NULL UNIQUE,
                                        file_size INTEGER,
+                                       file_modified_time INTEGER,
 
                                        game_version TEXT,
                                        character TEXT,

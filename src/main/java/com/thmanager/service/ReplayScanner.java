@@ -3,6 +3,7 @@ package com.thmanager.service;
 import com.thmanager.dao.GameDAO;
 import com.thmanager.model.Game;
 import com.thmanager.model.Replay;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -12,37 +13,34 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Service
 public class ReplayScanner {
 
     private final GameDAO gameDAO;
     private final ReplayParser parser;
 
-    public ReplayScanner() {
-        this.gameDAO = new GameDAO();
+    public ReplayScanner(GameDAO gameDAO) {
+        this.gameDAO = gameDAO;
         this.parser = new ReplayParser();
     }
 
     /**
      * 扫描所有已安装游戏的replay文件夹
+     * 
+     * @return 导入的 Replay 数量
      */
-    public List<Replay> scanAllGames() {
-        List<Replay> allReplays = new ArrayList<>();
+    public int scanAllGames() {
+        int importedCount = 0;
         List<Game> installedGames = gameDAO.findInstalled();
 
         for (Game game : installedGames) {
             if (game.getReplayFolder() != null) {
                 List<Replay> replays = scanGameReplays(game);
-                allReplays.addAll(replays);
+                importedCount += replays.size();
             }
         }
 
-        // 按日期降序排序
-        allReplays.sort((a, b) -> {
-            if (a.getGameDate() == null || b.getGameDate() == null) return 0;
-            return b.getGameDate().compareTo(a.getGameDate());
-        });
-
-        return allReplays;
+        return importedCount;
     }
 
     /**
@@ -66,7 +64,7 @@ public class ReplayScanner {
 
                 for (Path rpy : rpyFiles) {
                     System.out.println("Replay file: " + rpy);
-                    Optional<Replay> replay = parser.parse(rpy,game.getId());
+                    Optional<Replay> replay = parser.parse(rpy, game.getId());
                     if (replay.isPresent()) {
                         Replay r = replay.get();
                         r.setGameId(game.getId());
@@ -90,10 +88,12 @@ public class ReplayScanner {
      */
     public boolean playReplay(Replay replay) {
         Optional<Game> game = gameDAO.findById(replay.getGameId());
-        if (game.isEmpty()) return false;
+        if (game.isEmpty())
+            return false;
 
         String exePath = game.get().getFullExePath();
-        if (exePath == null) return false;
+        if (exePath == null)
+            return false;
 
         try {
             // 东方游戏启动replay的参数

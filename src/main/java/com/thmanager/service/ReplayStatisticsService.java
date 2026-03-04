@@ -4,6 +4,7 @@ import com.thmanager.dao.GameDAO;
 import com.thmanager.dao.ReplayDAO;
 import com.thmanager.model.Game;
 import com.thmanager.model.Replay;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,14 +13,15 @@ import java.util.stream.Collectors;
  * Replay专项统计服务
  * 实现：最高分追踪、机体使用统计、到达面数统计、每面炸弹统计
  */
+@Service
 public class ReplayStatisticsService {
 
     private final ReplayDAO replayDAO;
     private final GameDAO gameDAO;
 
-    public ReplayStatisticsService() {
-        this.replayDAO = new ReplayDAO();
-        this.gameDAO = new GameDAO();
+    public ReplayStatisticsService(ReplayDAO replayDAO, GameDAO gameDAO) {
+        this.replayDAO = replayDAO;
+        this.gameDAO = gameDAO;
     }
 
     // ========== 1. 某游戏某难度最大分数 ==========
@@ -30,7 +32,7 @@ public class ReplayStatisticsService {
 
     public Map<String, Replay> getBestScoresByDifficulty(int gameId) {
         Map<String, Replay> bests = new LinkedHashMap<>();
-        String[] difficulties = {"Easy", "Normal", "Hard", "Lunatic", "Extra", "Phantasm"};
+        String[] difficulties = { "Easy", "Normal", "Hard", "Lunatic", "Extra", "Phantasm" };
 
         for (String diff : difficulties) {
             replayDAO.findBestByDifficulty(gameId, diff).ifPresent(r -> bests.put(diff, r));
@@ -86,13 +88,14 @@ public class ReplayStatisticsService {
         Map<Integer, StageReachStat> stats = new TreeMap<>();
 
         for (Replay r : replays) {
-            int stageNumber = r.getReachedStageNumber();  // 使用不同的变量名
-            if (stageNumber <= 0) continue;
+            int stageNum = r.getReachedStageNumber();
+            if (stageNum <= 0)
+                continue;
 
-            StageReachStat stat = stats.get(stageNumber);
+            StageReachStat stat = stats.get(stageNum);
             if (stat == null) {
-                stat = new StageReachStat(stageNumber, 0, 0, 0, 0.0, new ArrayList<>());
-                stats.put(stageNumber, stat);
+                stat = new StageReachStat(stageNum, 0, 0, 0, 0.0, new ArrayList<>());
+                stats.put(stageNum, stat);
             }
 
             stat.reachCount++;
@@ -115,7 +118,8 @@ public class ReplayStatisticsService {
                 .filter(r -> difficulty.equalsIgnoreCase(r.getDifficulty()))
                 .toList();
 
-        if (replays.isEmpty()) return 0.0;
+        if (replays.isEmpty())
+            return 0.0;
 
         long clearCount = replays.stream().filter(Replay::isCleared).count();
         return (double) clearCount / replays.size() * 100;
@@ -143,7 +147,7 @@ public class ReplayStatisticsService {
 
         List<StageBombStat> result = new ArrayList<>();
         for (Map.Entry<Integer, List<Replay.StageBombStats>> entry : byStage.entrySet()) {
-            int stageNumber = entry.getKey();  // 使用不同的变量名
+            int stageNum = entry.getKey();
             List<Replay.StageBombStats> list = entry.getValue();
 
             double avgZBombs = list.stream().mapToInt(s -> s.zCount).average().orElse(0.0);
@@ -152,13 +156,12 @@ public class ReplayStatisticsService {
             int maxXBombs = list.stream().mapToInt(s -> s.xCount).max().orElse(0);
 
             result.add(new StageBombStat(
-                    stageNumber,
+                    stageNum,
                     list.size(),
                     avgZBombs,
                     avgXBombs,
                     maxZBombs,
-                    maxXBombs
-            ));
+                    maxXBombs));
         }
 
         return result.stream()
@@ -196,8 +199,7 @@ public class ReplayStatisticsService {
                         list.size(),
                         list.stream().mapToInt(s -> s.zCount).average().orElse(0.0),
                         list.stream().mapToInt(s -> s.xCount).average().orElse(0.0),
-                        0, 0
-                ));
+                        0, 0));
             }
 
             result.put(shot, stageStats.stream()
@@ -212,7 +214,8 @@ public class ReplayStatisticsService {
 
     public DifficultyFullReport generateDifficultyReport(int gameId, String difficulty) {
         Game game = gameDAO.findById(gameId).orElse(null);
-        if (game == null) return null;
+        if (game == null)
+            return null;
 
         long totalAttempts = replayDAO.findByGame(gameId).stream()
                 .filter(r -> difficulty.equalsIgnoreCase(r.getDifficulty()))
@@ -226,22 +229,21 @@ public class ReplayStatisticsService {
                 getStageReachStats(gameId, difficulty),
                 getStageBombStats(gameId, difficulty),
                 getClearRate(gameId, difficulty),
-                totalAttempts
-        );
+                totalAttempts);
     }
 
-    // ========== 数据类（使用标准Java Bean命名规范） ==========
+    // ========== 数据类（统一使用 getStageNumber）==========
 
     public static class ShotTypeUsage {
-        private String shotType;
-        private int useCount;
-        private long totalScore;
-        private long bestScore;
-        private long averageScore;
-        private List<Replay> records;
+        public String shotType;
+        public int useCount;
+        public long totalScore;
+        public long bestScore;
+        public long averageScore;
+        public List<Replay> records;
 
         public ShotTypeUsage(String shotType, int useCount, long totalScore,
-                             long bestScore, long averageScore, List<Replay> records) {
+                long bestScore, long averageScore, List<Replay> records) {
             this.shotType = shotType;
             this.useCount = useCount;
             this.totalScore = totalScore;
@@ -250,25 +252,66 @@ public class ReplayStatisticsService {
             this.records = records;
         }
 
-        // Getters
-        public String getShotType() { return shotType; }
-        public int getUseCount() { return useCount; }
-        public long getTotalScore() { return totalScore; }
-        public long getBestScore() { return bestScore; }
-        public long getAverageScore() { return averageScore; }
-        public List<Replay> getRecords() { return records; }
+        public String getShotType() {
+            return shotType;
+        }
+
+        public int getUseCount() {
+            return useCount;
+        }
+
+        public long getTotalScore() {
+            return totalScore;
+        }
+
+        public long getBestScore() {
+            return bestScore;
+        }
+
+        public long getAverageScore() {
+            return averageScore;
+        }
+
+        public List<Replay> getRecords() {
+            return records;
+        }
+
+        public void setShotType(String shotType) {
+            this.shotType = shotType;
+        }
+
+        public void setUseCount(int useCount) {
+            this.useCount = useCount;
+        }
+
+        public void setTotalScore(long totalScore) {
+            this.totalScore = totalScore;
+        }
+
+        public void setBestScore(long bestScore) {
+            this.bestScore = bestScore;
+        }
+
+        public void setAverageScore(long averageScore) {
+            this.averageScore = averageScore;
+        }
+
+        public void setRecords(List<Replay> records) {
+            this.records = records;
+        }
     }
 
     public static class StageReachStat {
-        private int stageNumber;      // 改名为 stageNumber 避免混淆
-        private int reachCount;
-        private int clearCount;
-        private long totalScore;
-        private double clearRate;
-        private List<Replay> records;
+        // 字段名改为 stageNumber，统一命名
+        public int stageNumber;
+        public int reachCount;
+        public int clearCount;
+        public long totalScore;
+        public double clearRate;
+        public List<Replay> records;
 
         public StageReachStat(int stageNumber, int reachCount, int clearCount,
-                              long totalScore, double clearRate, List<Replay> records) {
+                long totalScore, double clearRate, List<Replay> records) {
             this.stageNumber = stageNumber;
             this.reachCount = reachCount;
             this.clearCount = clearCount;
@@ -277,25 +320,42 @@ public class ReplayStatisticsService {
             this.records = records;
         }
 
-        // Getters
-        public int getStageNumber() { return stageNumber; }  // 明确命名
-        public int getReachCount() { return reachCount; }
-        public int getClearCount() { return clearCount; }
-        public long getTotalScore() { return totalScore; }
-        public double getClearRate() { return clearRate; }
-        public List<Replay> getRecords() { return records; }
+        // 统一使用 getStageNumber()
+        public int getStageNumber() {
+            return stageNumber;
+        }
+
+        public int getReachCount() {
+            return reachCount;
+        }
+
+        public int getClearCount() {
+            return clearCount;
+        }
+
+        public long getTotalScore() {
+            return totalScore;
+        }
+
+        public double getClearRate() {
+            return clearRate;
+        }
+
+        public List<Replay> getRecords() {
+            return records;
+        }
     }
 
     public static class StageBombStat {
-        private int stageNumber;      // 改名为 stageNumber
-        private int sampleCount;
-        private double avgZBombs;
-        private double avgXBombs;
-        private int maxZBombs;
-        private int maxXBombs;
+        public int stageNumber;
+        public int sampleCount;
+        public double avgZBombs;
+        public double avgXBombs;
+        public int maxZBombs;
+        public int maxXBombs;
 
         public StageBombStat(int stageNumber, int sampleCount, double avgZBombs,
-                             double avgXBombs, int maxZBombs, int maxXBombs) {
+                double avgXBombs, int maxZBombs, int maxXBombs) {
             this.stageNumber = stageNumber;
             this.sampleCount = sampleCount;
             this.avgZBombs = avgZBombs;
@@ -304,29 +364,45 @@ public class ReplayStatisticsService {
             this.maxXBombs = maxXBombs;
         }
 
-        // Getters
-        public int getStageNumber() { return stageNumber; }  // 明确命名
-        public int getSampleCount() { return sampleCount; }
-        public double getAvgZBombs() { return avgZBombs; }
-        public double getAvgXBombs() { return avgXBombs; }
-        public int getMaxZBombs() { return maxZBombs; }
-        public int getMaxXBombs() { return maxXBombs; }
+        public int getStageNumber() {
+            return stageNumber;
+        }
+
+        public int getSampleCount() {
+            return sampleCount;
+        }
+
+        public double getAvgZBombs() {
+            return avgZBombs;
+        }
+
+        public double getAvgXBombs() {
+            return avgXBombs;
+        }
+
+        public int getMaxZBombs() {
+            return maxZBombs;
+        }
+
+        public int getMaxXBombs() {
+            return maxXBombs;
+        }
     }
 
     public static class DifficultyFullReport {
-        private String gameName;
-        private String difficulty;
-        private Replay bestRecord;
-        private List<ShotTypeUsage> shotUsage;
-        private List<StageReachStat> stageStats;
-        private List<StageBombStat> bombStats;
-        private double overallClearRate;
-        private long totalAttempts;
+        public String gameName;
+        public String difficulty;
+        public Replay bestRecord;
+        public List<ShotTypeUsage> shotUsage;
+        public List<StageReachStat> stageStats;
+        public List<StageBombStat> bombStats;
+        public double overallClearRate;
+        public long totalAttempts;
 
         public DifficultyFullReport(String gameName, String difficulty, Replay bestRecord,
-                                    List<ShotTypeUsage> shotUsage, List<StageReachStat> stageStats,
-                                    List<StageBombStat> bombStats, double overallClearRate,
-                                    long totalAttempts) {
+                List<ShotTypeUsage> shotUsage, List<StageReachStat> stageStats,
+                List<StageBombStat> bombStats, double overallClearRate,
+                long totalAttempts) {
             this.gameName = gameName;
             this.difficulty = difficulty;
             this.bestRecord = bestRecord;
@@ -337,14 +413,36 @@ public class ReplayStatisticsService {
             this.totalAttempts = totalAttempts;
         }
 
-        // Getters
-        public String getGameName() { return gameName; }
-        public String getDifficulty() { return difficulty; }
-        public Replay getBestRecord() { return bestRecord; }
-        public List<ShotTypeUsage> getShotUsage() { return shotUsage; }
-        public List<StageReachStat> getStageStats() { return stageStats; }
-        public List<StageBombStat> getBombStats() { return bombStats; }
-        public double getOverallClearRate() { return overallClearRate; }
-        public long getTotalAttempts() { return totalAttempts; }
+        public String getGameName() {
+            return gameName;
+        }
+
+        public String getDifficulty() {
+            return difficulty;
+        }
+
+        public Replay getBestRecord() {
+            return bestRecord;
+        }
+
+        public List<ShotTypeUsage> getShotUsage() {
+            return shotUsage;
+        }
+
+        public List<StageReachStat> getStageStats() {
+            return stageStats;
+        }
+
+        public List<StageBombStat> getBombStats() {
+            return bombStats;
+        }
+
+        public double getOverallClearRate() {
+            return overallClearRate;
+        }
+
+        public long getTotalAttempts() {
+            return totalAttempts;
+        }
     }
 }
