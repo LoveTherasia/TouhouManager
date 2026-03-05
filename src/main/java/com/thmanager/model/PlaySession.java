@@ -1,9 +1,12 @@
 package com.thmanager.model;
 
+import lombok.Data;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 
 //游戏会话实体类
+@Data
 public class PlaySession {
     private int id;
     private int gameId;// 关联的游戏ID
@@ -60,62 +63,5 @@ public class PlaySession {
             return String.format("%02d:%02d:%02d", hours, minutes, seconds);
         }
         return String.format("%02d:%02d", minutes, seconds);
-    }
-
-    // Getters and Setters
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(int gameId) {
-        this.gameId = gameId;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public long getDurationSeconds() {
-        return durationSeconds;
-    }
-
-    public void setDurationSeconds(long durationSeconds) {
-        this.durationSeconds = durationSeconds;
-    }
-
-    public String getSessionType() {
-        return sessionType;
-    }
-
-    public void setSessionType(String sessionType) {
-        this.sessionType = sessionType;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
     }
 }

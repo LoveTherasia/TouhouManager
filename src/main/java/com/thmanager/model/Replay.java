@@ -1,9 +1,12 @@
 package com.thmanager.model;
 
+import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 public class Replay {
 
     // 数据库基础字段
@@ -142,164 +145,6 @@ public class Replay {
         return bombStatsList.get(stageNum - 1).xCount;
     }
 
-    // ========== Getters and Setters ==========
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(int gameId) {
-        this.gameId = gameId;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
-
-    public long getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(long fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public long getFileModifiedTime() {
-        return fileModifiedTime;
-    }
-
-    public void setFileModifiedTime(long fileModifiedTime) {
-        this.fileModifiedTime = fileModifiedTime;
-    }
-
-    public LocalDateTime getImportedAt() {
-        return importedAt;
-    }
-
-    public void setImportedAt(LocalDateTime importedAt) {
-        this.importedAt = importedAt;
-    }
-
-    public Integer getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(Integer sessionId) {
-        this.sessionId = sessionId;
-    }
-
-    public String getGameVersion() {
-        return gameVersion;
-    }
-
-    public void setGameVersion(String gameVersion) {
-        this.gameVersion = gameVersion;
-    }
-
-    public String getCharacter() {
-        return character;
-    }
-
-    public void setCharacter(String character) {
-        this.character = character;
-    }
-
-    public String getShotType() {
-        return shotType;
-    }
-
-    public void setShotType(String shotType) {
-        this.shotType = shotType;
-    }
-
-    public String getDifficulty() {
-        return difficulty;
-    }
-
-    public void setDifficulty(String difficulty) {
-        this.difficulty = difficulty;
-    }
-
-    public String getStage() {
-        return stage;
-    }
-
-    public void setStage(String stage) {
-        this.stage = stage;
-    }
-
-    public boolean isCleared() {
-        return cleared;
-    }
-
-    public void setCleared(boolean cleared) {
-        this.cleared = cleared;
-    }
-
-    public long getTotalScore() {
-        return totalScore;
-    }
-
-    public void setTotalScore(long totalScore) {
-        this.totalScore = totalScore;
-    }
-
-    public LocalDateTime getGameDate() {
-        return gameDate;
-    }
-
-    public void setGameDate(LocalDateTime gameDate) {
-        this.gameDate = gameDate;
-    }
-
-    public String getPlayerName() {
-        return playerName;
-    }
-
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
-    }
-
-    public float getSlowRate() {
-        return slowRate;
-    }
-
-    public void setSlowRate(float slowRate) {
-        this.slowRate = slowRate;
-    }
-
-    public int getTotalFrames() {
-        return totalFrames;
-    }
-
-    public void setTotalFrames(int totalFrames) {
-        this.totalFrames = totalFrames;
-    }
-
-    public String getStageScoresJson() {
-        return stageScoresJson;
-    }
-
     public void setStageScoresJson(String stageScoresJson) {
         this.stageScoresJson = stageScoresJson;
         if (stageScoresJson != null && !stageScoresJson.isEmpty()) {
@@ -316,70 +161,6 @@ public class Replay {
                 this.stageScoresList = null;
             }
         }
-    }
-
-    public String getBombStatsJson() {
-        return bombStatsJson;
-    }
-
-    public void setBombStatsJson(String bombStatsJson) {
-        this.bombStatsJson = bombStatsJson;
-    }
-
-    public int getTotalZBombs() {
-        return totalZBombs;
-    }
-
-    public void setTotalZBombs(int totalZBombs) {
-        this.totalZBombs = totalZBombs;
-    }
-
-    public int getTotalXBombs() {
-        return totalXBombs;
-    }
-
-    public void setTotalXBombs(int totalXBombs) {
-        this.totalXBombs = totalXBombs;
-    }
-
-    public int getTotalCBombs() {
-        return totalCBombs;
-    }
-
-    public void setTotalCBombs(int totalCBombs) {
-        this.totalCBombs = totalCBombs;
-    }
-
-    public String getRawJson() {
-        return rawJson;
-    }
-
-    public void setRawJson(String rawJson) {
-        this.rawJson = rawJson;
-    }
-
-    public String getGameTitle() {
-        return gameTitle;
-    }
-
-    public void setGameTitle(String gameTitle) {
-        this.gameTitle = gameTitle;
-    }
-
-    public List<Long> getStageScoresList() {
-        return stageScoresList;
-    }
-
-    public void setStageScoresList(List<Long> stageScoresList) {
-        this.stageScoresList = stageScoresList;
-    }
-
-    public List<StageBombStats> getBombStatsList() {
-        return bombStatsList;
-    }
-
-    public void setBombStatsList(List<StageBombStats> bombStatsList) {
-        this.bombStatsList = bombStatsList;
     }
 
     @Override

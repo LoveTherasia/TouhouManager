@@ -63,7 +63,7 @@ public class DatabaseManager {
     }
 
     // 执行初始化脚本
-    private void executeInitScript(Connection conn) {
+    private void  executeInitScript(Connection conn) {
         try {
             // 从resources中读取SQL文件
             InputStream is = getClass().getResourceAsStream("/database/init.sql");

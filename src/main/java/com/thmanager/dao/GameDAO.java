@@ -28,6 +28,7 @@ public class GameDAO {
         return games;
     }
 
+
     public Optional<Game> findById(int id) {
         String sql = "SELECT * FROM games WHERE id = ?";
 
@@ -72,6 +73,20 @@ public class GameDAO {
             System.err.println("Failed to update game information: " + e.getMessage());
             return false;
         }
+    }
+
+    //删除游戏信息
+    public boolean Delete(int id){
+        String sql = "DELETE FROM games WHERE id = ?";
+
+        try(Connection conn = DatabaseManager.getInstance().getConnection()){
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            return pstmt.executeUpdate() > 0;
+        }catch(SQLException e){
+            System.out.println("删除ID为" + id + "的游戏失败!");
+            return false;
+        }
+
     }
 
     // 获取已安装的游戏
