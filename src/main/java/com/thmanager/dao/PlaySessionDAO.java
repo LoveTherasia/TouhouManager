@@ -9,6 +9,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
+//游戏对话信息管理类
 @Repository
 public class PlaySessionDAO {
 

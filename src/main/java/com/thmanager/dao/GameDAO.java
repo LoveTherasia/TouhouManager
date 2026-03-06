@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+//游戏数据管理类
 @Repository
 public class GameDAO {
     // 查询所有游戏
