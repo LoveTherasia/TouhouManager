@@ -1,208 +1,294 @@
 <template>
   <div class="settings-page">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>游戏路径设置</span>
-          <el-button type="primary" @click="saveSettings">
-            <el-icon><Check /></el-icon>
-            保存设置
-          </el-button>
+    <div class="card">
+      <div class="card-header">
+        <span>游戏路径设置</span>
+        <button class="primary-button" @click="saveSettings">
+          ✅ 保存设置
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="alert info">
+          <div class="alert-icon">ℹ️</div>
+          <div class="alert-content">
+            <div class="alert-title">提示</div>
+            <div class="alert-description">请设置各游戏的安装路径，设置后系统会自动检测游戏是否已安装并扫描 Replay 文件。</div>
+          </div>
         </div>
-      </template>
-
-      <el-alert
-        title="提示"
-        description="请设置各游戏的安装路径，设置后系统会自动检测游戏是否已安装并扫描 Replay 文件。"
-        type="info"
-        show-icon
-        :closable="false"
-        style="margin-bottom: 20px;"
-      />
-
-      <el-table :data="gameSettings" v-loading="loading" stripe>
-        <el-table-column type="index" width="50" />
-        <el-table-column prop="displayName" label="游戏" min-width="200" />
-        <el-table-column label="安装路径" min-width="300">
-          <template #default="{ row }">
-            <el-input
-              v-model="row.installPath"
-              placeholder="请选择游戏安装目录"
-              readonly
-            >
-              <template #append>
-                <el-button @click="selectPath(row)">
-                  <el-icon><Folder /></el-icon>
-                </el-button>
-              </template>
-            </el-input>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.installPath ? 'success' : 'info'">
-              {{ row.installPath ? '已设置' : '未设置' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <!-- 批量设置对话框 -->
-    <el-dialog v-model="batchDialogVisible" title="批量设置路径" width="500px">
-      <el-form :model="batchForm" label-width="100px">
-        <el-form-item label="根目录">
-          <el-input v-model="batchForm.rootPath" placeholder="例如: D:\\Touhou">
-            <template #append>
-              <el-button @click="selectRootPath">
-                <el-icon><Folder /></el-icon>
-              </el-button>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item label="命名规则">
-          <el-select v-model="batchForm.pattern" style="width: 100%;">
-            <el-option label="THxx 格式 (如: TH06, TH07)" value="thxx" />
-            <el-option label="中文名格式" value="chinese" />
-            <el-option label="日文名格式" value="japanese" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="batchDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="applyBatch">应用</el-button>
-      </template>
-    </el-dialog>
+        
+        <div v-if="loading" class="loading">
+          加载中...
+        </div>
+        <div v-else class="settings-form">
+          <div v-for="game in gamesStore.games" :key="game.id" class="form-group">
+            <label class="form-label">
+              {{ game.displayName }}
+              <span :class="['status-badge', game.installed ? 'installed' : 'not-installed']">
+                {{ game.installed ? '已安装' : '未安装' }}
+              </span>
+            </label>
+            <div class="path-input-group">
+              <input 
+                type="text" 
+                v-model="gamePaths[game.id]" 
+                class="path-input"
+                placeholder="请输入游戏安装路径"
+              />
+              <button class="secondary-button" @click="browsePath(game.id)">
+                浏览
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElTable } from 'element-plus'
-import * as settingsApi from '../api/settings'
+import { useGamesStore } from '../stores/games'
 
 const route = useRoute()
-const loading = ref(false)
-const gameSettings = ref([])
-const batchDialogVisible = ref(false)
-const batchForm = ref({
-  rootPath: '',
-  pattern: 'thxx'
-})
+const gamesStore = useGamesStore()
 
-const fetchSettings = async () => {
+const loading = ref(false)
+const gamePaths = ref({})
+
+const loadGamePaths = () => {
+  gamesStore.games.forEach(game => {
+    gamePaths.value[game.id] = game.path || ''
+  })
+}
+
+const saveSettings = async () => {
   loading.value = true
   try {
-    const data = await settingsApi.getAllGames()
-    gameSettings.value = data.map(game => ({
-      ...game,
-      installPath: game.installPath || ''
-    }))
-    
-    // 如果有 gameId 参数，滚动到对应游戏行
-    const gameId = route.query.gameId
-    if (gameId) {
-      setTimeout(() => {
-        const table = document.querySelector('.el-table')
-        if (table) {
-          const rows = table.querySelectorAll('.el-table__row')
-          rows.forEach((row, index) => {
-            if (gameSettings.value[index] && gameSettings.value[index].id == gameId) {
-              row.scrollIntoView({ behavior: 'smooth', block: 'center' })
-              // 高亮显示该行
-              row.classList.add('el-table__row--highlight')
-            }
-          })
-        }
-      }, 500)
+    for (const [gameId, path] of Object.entries(gamePaths.value)) {
+      await gamesStore.updateGamePath(parseInt(gameId), path)
     }
+    await gamesStore.fetchGames()
+    alert('设置保存成功！')
   } catch (error) {
-    console.error('Failed to fetch settings:', error)
-    ElMessage.error('加载设置失败')
+    console.error('保存设置失败:', error)
+    alert('保存设置失败，请重试')
   } finally {
     loading.value = false
   }
 }
 
-const selectPath = async (game) => {
-  // 在 Web 环境中使用 input 模拟文件夹选择
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.webkitdirectory = true
-  input.onchange = (e) => {
-    if (e.target.files.length > 0) {
-      const path = e.target.files[0].path || e.target.files[0].webkitRelativePath.split('/')[0]
-      game.installPath = path
-    }
+const browsePath = (gameId) => {
+  // 这里可以实现文件选择对话框
+  // 由于是模拟环境，暂时使用 prompt
+  const path = prompt('请输入游戏安装路径:')
+  if (path) {
+    gamePaths.value[gameId] = path
   }
-  input.click()
 }
 
-const selectRootPath = () => {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.webkitdirectory = true
-  input.onchange = (e) => {
-    if (e.target.files.length > 0) {
-      batchForm.value.rootPath = e.target.files[0].path
-    }
-  }
-  input.click()
-}
-
-const saveSettings = async () => {
+onMounted(async () => {
+  loading.value = true
   try {
-    for (const game of gameSettings.value) {
-      if (game.installPath) {
-        await settingsApi.updateGameSettings(game.id, {
-          installPath: game.installPath
-        })
-      }
-    }
-    ElMessage.success('设置已保存')
-  } catch (error) {
-    console.error('Failed to save settings:', error)
-    ElMessage.error('保存失败')
+    await gamesStore.fetchGames()
+    loadGamePaths()
+  } finally {
+    loading.value = false
   }
-}
-
-const applyBatch = () => {
-  const { rootPath, pattern } = batchForm.value
-  if (!rootPath) {
-    ElMessage.warning('请先选择根目录')
-    return
-  }
-
-  gameSettings.value.forEach(game => {
-    let folderName = ''
-    if (pattern === 'thxx') {
-      folderName = `TH${String(game.gameNumber).padStart(2, '0')}`
-    } else if (pattern === 'chinese') {
-      folderName = game.titleCn || game.titleJa
-    } else {
-      folderName = game.titleJa
-    }
-    game.installPath = `${rootPath}\${folderName}`
-  })
-
-  batchDialogVisible.value = false
-  ElMessage.success('批量设置完成，请检查路径后保存')
-}
-
-onMounted(() => {
-  fetchSettings()
 })
 </script>
 
 <style scoped>
 .settings-page {
   padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  background: rgba(144, 147, 153, 0.1);
+  border: 1px solid rgba(144, 147, 153, 0.2);
+}
+
+.alert.info {
+  background: rgba(144, 147, 153, 0.1);
+  border-color: rgba(144, 147, 153, 0.2);
+}
+
+.alert-icon {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.alert-description {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.installed {
+  background: rgba(103, 194, 58, 0.2);
+  color: #67c23a;
+  border: 1px solid rgba(103, 194, 58, 0.3);
+}
+
+.status-badge.not-installed {
+  background: rgba(144, 147, 153, 0.2);
+  color: #909399;
+  border: 1px solid rgba(144, 147, 153, 0.3);
+}
+
+.path-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.path-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.path-input:hover {
+  border-color: rgba(64, 158, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.secondary-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.secondary-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .path-input-group {
+    flex-direction: column;
+  }
+  
+  .secondary-button {
+    align-self: flex-start;
+  }
 }
 </style>

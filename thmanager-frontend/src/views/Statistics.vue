@@ -1,318 +1,385 @@
 <template>
   <div class="statistics-page">
-    <el-tabs v-model="activeTab">
-      <el-tab-pane label="统计分析" name="statistics">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-card>
-              <template #header>游戏时长统计</template>
-              <div ref="playTimeChart" style="height: 300px;"></div>
-            </el-card>
-          </el-col>
-          <el-col :span="12">
-            <el-card>
-              <template #header>难度分布</template>
-              <div ref="difficultyChart" style="height: 300px;"></div>
-            </el-card>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20" class="mt-20">
-          <el-col :span="24">
-            <el-card>
-              <template #header>分数趋势</template>
-              <div ref="scoreChart" style="height: 350px;"></div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-tab-pane>
-      <el-tab-pane label="Replays" name="replays">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <span>Replay 列表</span>
-              <el-input 
+    <div class="tabs">
+      <button 
+        :class="['tab-button', { active: activeTab === 'statistics' }]"
+        @click="activeTab = 'statistics'"
+      >
+        统计分析
+      </button>
+      <button 
+        :class="['tab-button', { active: activeTab === 'replays' }]"
+        @click="activeTab = 'replays'"
+      >
+        Replays
+      </button>
+    </div>
+    
+    <div class="tab-content">
+      <!-- 统计分析标签页 -->
+      <div v-if="activeTab === 'statistics'" class="statistics-content">
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">游戏时长统计</div>
+            <div class="card-body">
+              <div v-if="loading" class="loading">加载中...</div>
+              <div v-else class="chart-placeholder">
+                游戏时长统计图表
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">难度分布</div>
+            <div class="card-body">
+              <div v-if="loading" class="loading">加载中...</div>
+              <div v-else class="chart-placeholder">
+                难度分布图表
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card mt-20">
+          <div class="card-header">分数趋势</div>
+          <div class="card-body">
+            <div v-if="loading" class="loading">加载中...</div>
+            <div v-else class="chart-placeholder">
+              分数趋势图表
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Replays 标签页 -->
+      <div v-if="activeTab === 'replays'" class="replays-content">
+        <div class="card">
+          <div class="card-header">
+            <span>Replay 列表</span>
+            <div class="header-actions">
+              <input 
                 v-model="replayFilter" 
                 placeholder="搜索 Replay" 
-                style="width: 200px;"
-                clearable
-              >
-                <template #prefix>
-                  <el-icon><Search /></el-icon>
-                </template>
-              </el-input>
+                class="search-input"
+              />
             </div>
-          </template>
-          <el-table :data="filteredReplays" v-loading="replaysLoading" stripe>
-            <el-table-column type="index" width="50" />
-            <el-table-column prop="gameTitle" label="游戏" min-width="150" />
-            <el-table-column prop="playerName" label="玩家" min-width="100" />
-            <el-table-column prop="difficultyDisplay" label="难度" width="100" />
-            <el-table-column prop="totalScore" label="分数" width="120" formatter="formatScore" />
-            <el-table-column prop="stage" label="关卡" width="80" />
-            <el-table-column prop="date" label="日期" width="150" />
-            <el-table-column label="操作" width="120">
-              <template #default="{ row }">
-                <el-button size="small" type="primary" @click="viewReplay(row)">
-                  <el-icon><View /></el-icon>
-                  查看
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          <div class="pagination" v-if="replaysStore.replays.length > 0">
-            <el-pagination
-              v-model:current-page="currentPage"
-              v-model:page-size="pageSize"
-              :page-sizes="[10, 20, 50]"
-              layout="total, sizes, prev, pager, next, jumper"
-              :total="replaysStore.replays.length"
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
-            />
           </div>
-        </el-card>
-      </el-tab-pane>
-    </el-tabs>
+          <div class="card-body">
+            <div v-if="replaysLoading" class="loading">加载中...</div>
+            <div v-else-if="filteredReplays.length === 0" class="empty">
+              暂无 Replay 数据
+            </div>
+            <div v-else class="replays-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>游戏</th>
+                    <th>玩家</th>
+                    <th>难度</th>
+                    <th>分数</th>
+                    <th>关卡</th>
+                    <th>日期</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(replay, index) in paginatedReplays" :key="replay.id">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ replay.gameTitle }}</td>
+                    <td>{{ replay.playerName }}</td>
+                    <td>{{ replay.difficultyDisplay }}</td>
+                    <td>{{ formatScore(replay.totalScore) }}</td>
+                    <td>{{ replay.stage }}</td>
+                    <td>{{ replay.date }}</td>
+                    <td class="actions">
+                      <button class="action-button" @click="viewReplay(replay)">
+                        查看
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" v-if="filteredReplays.length > 0">
+              <div class="pagination-info">
+                共 {{ filteredReplays.length }} 条记录
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { BarChart, PieChart, LineChart } from 'echarts/charts'
-import {
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent,
-  DatasetComponent
-} from 'echarts/components'
-import * as echarts from 'echarts/core'
+import { ref, computed, onMounted } from 'vue'
 import { useStatisticsStore } from '../stores/statistics'
 import { useGamesStore } from '../stores/games'
 import { useReplaysStore } from '../stores/replays'
-import { Search, View } from '@element-plus/icons-vue'
 
-use([
-  CanvasRenderer,
-  BarChart,
-  PieChart,
-  LineChart,
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  TitleComponent,
-  DatasetComponent
-])
-
-const statsStore = useStatisticsStore()
+const statisticsStore = useStatisticsStore()
 const gamesStore = useGamesStore()
 const replaysStore = useReplaysStore()
 
-// 标签页
 const activeTab = ref('statistics')
-
-// Replays 相关
+const loading = ref(false)
+const replaysLoading = ref(false)
 const replayFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
-const replaysLoading = ref(false)
 
-// 图表相关
-const playTimeChart = ref(null)
-const difficultyChart = ref(null)
-const scoreChart = ref(null)
-
-let playTimeChartInstance = null
-let difficultyChartInstance = null
-let scoreChartInstance = null
-
-// 过滤后的 Replays
 const filteredReplays = computed(() => {
-  let filtered = replaysStore.replays
-  if (replayFilter.value) {
-    const filter = replayFilter.value.toLowerCase()
-    filtered = filtered.filter(replay => 
-      (replay.gameTitle || '').toLowerCase().includes(filter) ||
-      (replay.playerName || '').toLowerCase().includes(filter) ||
-      (replay.difficultyDisplay || '').toLowerCase().includes(filter)
-    )
+  if (!replayFilter.value) {
+    return replaysStore.replays
   }
-  // 分页
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filtered.slice(start, end)
+  const filter = replayFilter.value.toLowerCase()
+  return replaysStore.replays.filter(replay => 
+    replay.gameTitle.toLowerCase().includes(filter) ||
+    replay.playerName.toLowerCase().includes(filter) ||
+    replay.difficultyDisplay.toLowerCase().includes(filter)
+  )
 })
 
-// 格式化分数
-const formatScore = (row, column, cellValue) => {
-  if (!cellValue) return '0'
-  return (cellValue / 100000000).toFixed(1) + '亿'
+const paginatedReplays = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredReplays.value.slice(start, end)
+})
+
+const formatScore = (score) => {
+  return score.toLocaleString()
 }
 
-// 查看 Replay 详情
-const viewReplay = (row) => {
-  console.log('查看 Replay:', row)
-  // 这里可以添加查看 Replay 详情的逻辑
+const viewReplay = (replay) => {
+  console.log('查看 Replay:', replay)
+  // 实现查看 Replay 的逻辑
 }
 
-// 分页处理
 const handleSizeChange = (size) => {
   pageSize.value = size
   currentPage.value = 1
 }
 
-const handleCurrentChange = (current) => {
-  currentPage.value = current
-}
-
-const initPlayTimeChart = () => {
-  if (!playTimeChart.value) return
-  
-  playTimeChartInstance = echarts.init(playTimeChart.value)
-  const games = gamesStore.installedGames
-  
-  playTimeChartInstance.setOption({
-    tooltip: { trigger: 'axis' },
-    xAxis: {
-      type: 'category',
-      data: games.map(g => g.displayName?.split(' - ')[1] || g.displayName),
-      axisLabel: { rotate: 45 }
-    },
-    yAxis: { type: 'value', name: '小时' },
-    series: [{
-      data: games.map(g => {
-        const hours = parseInt(g.totalPlayTime?.split('小时')[0] || 0)
-        return hours
-      }),
-      type: 'bar',
-      itemStyle: { color: '#409EFF' }
-    }]
-  })
-}
-
-const initDifficultyChart = () => {
-  if (!difficultyChart.value) return
-  
-  difficultyChartInstance = echarts.init(difficultyChart.value)
-  const replays = replaysStore.replays
-  
-  const difficultyCount = {}
-  replays.forEach(r => {
-    const diff = r.difficultyDisplay || 'Unknown'
-    difficultyCount[diff] = (difficultyCount[diff] || 0) + 1
-  })
-  
-  const data = Object.entries(difficultyCount).map(([name, value]) => ({ name, value }))
-  
-  difficultyChartInstance.setOption({
-    tooltip: { trigger: 'item' },
-    legend: { orient: 'vertical', left: 'left' },
-    series: [{
-      type: 'pie',
-      radius: '60%',
-      data,
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        }
-      }
-    }]
-  })
-}
-
-const initScoreChart = () => {
-  if (!scoreChart.value) return
-  
-  scoreChartInstance = echarts.init(scoreChart.value)
-  const replays = replaysStore.replays.slice(0, 20)
-  
-  scoreChartInstance.setOption({
-    tooltip: { trigger: 'axis' },
-    xAxis: {
-      type: 'category',
-      data: replays.map((r, i) => `#${i + 1}`)
-    },
-    yAxis: { 
-      type: 'value',
-      axisLabel: {
-        formatter: (value) => (value / 100000000).toFixed(1) + '亿'
-      }
-    },
-    series: [{
-      data: replays.map(r => r.totalScore || 0),
-      type: 'line',
-      smooth: true,
-      areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-            { offset: 1, color: 'rgba(64, 158, 255, 0.05)' }
-          ]
-        }
-      },
-      itemStyle: { color: '#409EFF' }
-    }]
-  })
-}
-
-const handleResize = () => {
-  playTimeChartInstance?.resize()
-  difficultyChartInstance?.resize()
-  scoreChartInstance?.resize()
+const handleCurrentChange = (page) => {
+  currentPage.value = page
 }
 
 onMounted(async () => {
+  loading.value = true
   replaysLoading.value = true
   try {
-    await Promise.all([
-      statsStore.fetchStatistics(),
-      gamesStore.fetchGames(),
-      replaysStore.fetchReplays()
-    ])
-    
-    initPlayTimeChart()
-    initDifficultyChart()
-    initScoreChart()
+    await gamesStore.fetchGames()
+    await replaysStore.fetchReplays()
   } finally {
+    loading.value = false
     replaysLoading.value = false
   }
-  
-  window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  playTimeChartInstance?.dispose()
-  difficultyChartInstance?.dispose()
-  scoreChartInstance?.dispose()
 })
 </script>
 
 <style scoped>
 .statistics-page {
   padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
 }
 
-.mt-20 {
-  margin-top: 20px;
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tab-button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
+.tab-content {
+  min-height: 400px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 200px;
+}
+
+.search-input:hover {
+  border-color: rgba(64, 158, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chart-placeholder {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.replays-table {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: #fff;
+}
+
+tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .pagination {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.pagination-info {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  th, td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
 }
 </style>

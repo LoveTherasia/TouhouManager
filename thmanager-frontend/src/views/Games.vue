@@ -1,129 +1,162 @@
 <template>
   <div class="games-page">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>游戏库</span>
-          <el-button type="primary" @click="refreshGames">
-            <el-icon><Refresh /></el-icon>
-            刷新
-          </el-button>
-        </div>
-      </template>
-
-      <el-table :data="gamesStore.games" v-loading="gamesStore.loading" stripe>
-        <el-table-column type="index" width="50" />
-        <el-table-column prop="displayName" label="游戏名称" min-width="200">
-          <template #default="{ row }">
-            <div class="game-name">
-              <el-tag v-if="row.installed" type="success" size="small">已安装</el-tag>
-              <el-tag v-else type="info" size="small">未安装</el-tag>
-              <span class="name-text">{{ row.displayName }}</span>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="installPath" label="安装路径" min-width="250" show-overflow-tooltip />
-        <el-table-column prop="totalPlayTime" label="游戏时长" width="120" />
-        <el-table-column prop="replayCount" label="Replay数" width="100" align="center" />
-        <el-table-column label="操作" width="200" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-button 
-              v-if="row.installed"
-              type="primary" 
-              size="small"
-              @click="handleLaunch(row)"
-              :disabled="gamesStore.isRunning"
-            >
-              启动
-            </el-button>
-            <el-button type="info" size="small" @click="viewDetails(row)">
-              详情
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <!-- 游戏详情对话框 -->
-    <el-dialog v-model="detailVisible" title="游戏详情" width="600px">
-      <el-descriptions :column="2" border v-if="selectedGame">
-        <el-descriptions-item label="游戏名称">{{ selectedGame.displayName }}</el-descriptions-item>
-        <el-descriptions-item label="安装状态">
-          <el-tag :type="selectedGame.installed ? 'success' : 'info'">
-            {{ selectedGame.installed ? '已安装' : '未安装' }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="安装路径" :span="2">{{ selectedGame.installPath || '未设置' }}</el-descriptions-item>
-        <el-descriptions-item label="游戏时长">{{ selectedGame.totalPlayTime }}</el-descriptions-item>
-        <el-descriptions-item label="Replay数量">{{ selectedGame.replayCount }}</el-descriptions-item>
-      </el-descriptions>
-    </el-dialog>
-
-    <!-- 倒计时对话框 -->
-    <el-dialog
-      v-model="countdownVisible"
-      title="准备启动"
-      width="300px"
-      :close-on-click-modal="false"
-      :show-close="false"
-      center
-    >
-      <div class="countdown-content">
-        <div class="countdown-number">{{ countdown }}</div>
-        <div class="countdown-text">{{ selectedGame?.displayName }}</div>
+    <div class="card">
+      <div class="card-header">
+        <span>游戏库</span>
+        <button class="primary-button" @click="refreshGames">
+          🔄 刷新
+        </button>
       </div>
-    </el-dialog>
+      <div class="card-body">
+        <div v-if="gamesStore.loading" class="loading">
+          加载中...
+        </div>
+        <div v-else-if="gamesStore.games.length === 0" class="empty">
+          暂无游戏数据
+        </div>
+        <div v-else class="games-table">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>游戏名称</th>
+                <th>版本</th>
+                <th>状态</th>
+                <th>路径</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(game, index) in gamesStore.games" :key="game.id">
+                <td>{{ index + 1 }}</td>
+                <td class="game-name">
+                  <span :class="['status-tag', game.installed ? 'installed' : 'not-installed']">
+                    {{ game.installed ? '已安装' : '未安装' }}
+                  </span>
+                  {{ game.displayName }}
+                </td>
+                <td>{{ game.version }}</td>
+                <td>{{ game.installed ? '已安装' : '未安装' }}</td>
+                <td class="game-path">{{ game.path || '未设置' }}</td>
+                <td class="actions">
+                  <button class="action-button" @click="navigateToSettings(game)">
+                    设置
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useGamesStore } from '../stores/games'
-import { ElMessage } from 'element-plus'
 
+const router = useRouter()
 const gamesStore = useGamesStore()
 
-const detailVisible = ref(false)
-const countdownVisible = ref(false)
-const selectedGame = ref(null)
-const countdown = ref(3)
-
-const refreshGames = () => {
-  gamesStore.fetchGames()
-  ElMessage.success('刷新成功')
+const refreshGames = async () => {
+  await gamesStore.fetchGames()
 }
 
-const handleLaunch = (game) => {
-  selectedGame.value = game
-  countdownVisible.value = true
-  countdown.value = 3
-  
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-      countdownVisible.value = false
-      gamesStore.launchGame(game.id, 0)
-      ElMessage.success(`正在启动 ${game.displayName}`)
-    }
-  }, 1000)
+const navigateToSettings = (game) => {
+  router.push(`/settings?gameId=${game.id}`)
 }
 
-const viewDetails = (game) => {
-  selectedGame.value = game
-  detailVisible.value = true
-}
+onMounted(async () => {
+  await gamesStore.fetchGames()
+})
 </script>
 
 <style scoped>
 .games-page {
   padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.games-table {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: #fff;
+}
+
+tr:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .game-name {
@@ -132,24 +165,69 @@ const viewDetails = (game) => {
   gap: 8px;
 }
 
-.name-text {
-  font-weight: 500;
+.status-tag {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.countdown-content {
-  text-align: center;
-  padding: 20px;
+.status-tag.installed {
+  background: rgba(103, 194, 58, 0.2);
+  color: #67c23a;
+  border: 1px solid rgba(103, 194, 58, 0.3);
 }
 
-.countdown-number {
-  font-size: 72px;
-  font-weight: bold;
-  color: #409EFF;
+.status-tag.not-installed {
+  background: rgba(144, 147, 153, 0.2);
+  color: #909399;
+  border: 1px solid rgba(144, 147, 153, 0.3);
 }
 
-.countdown-text {
-  font-size: 16px;
-  color: #606266;
-  margin-top: 10px;
+.game-path {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  th, td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  
+  .game-path {
+    max-width: 200px;
+  }
 }
 </style>

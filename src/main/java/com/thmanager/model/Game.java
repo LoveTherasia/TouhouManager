@@ -31,6 +31,11 @@ public class Game {
         return String.format("TH%02d - %s", gameNumber, titleCn != null ? titleCn : titleJa);
     }
 
+    // 获取短名称（用于图片文件名）
+    public String getShortName() {
+        return String.format("th%02d", gameNumber);
+    }
+
     // 格式化显示总游玩时间
     public String getFormattedPlayTime() {
         long hours = totalPlayTimeSeconds / 3600;

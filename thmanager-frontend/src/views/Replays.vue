@@ -1,87 +1,64 @@
 <template>
   <div class="replays-page">
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>Replay 管理</span>
-          <div class="header-actions">
-            <el-select v-model="filterGame" placeholder="筛选游戏" clearable style="width: 200px; margin-right: 10px;">
-              <el-option
-                v-for="game in gamesStore.installedGames"
-                :key="game.id"
-                :label="game.displayName"
-                :value="game.id"
-              />
-            </el-select>
-            <el-button type="primary" @click="handleScan">
-              <el-icon><Refresh /></el-icon>
-              扫描新 Replay
-            </el-button>
-          </div>
+    <div class="card">
+      <div class="card-header">
+        <span>Replay 管理</span>
+        <div class="header-actions">
+          <select v-model="filterGame" class="custom-select" style="width: 200px; margin-right: 10px;">
+            <option value="">筛选游戏</option>
+            <option
+              v-for="game in gamesStore.installedGames"
+              :key="game.id"
+              :value="game.id"
+            >{{ game.displayName }}</option>
+          </select>
+          <button class="primary-button" @click="handleScan">
+            🔄 扫描新 Replay
+          </button>
         </div>
-      </template>
-
-      <el-table 
-        :data="filteredReplays" 
-        v-loading="replaysStore.loading" 
-        stripe
-        height="calc(100vh - 250px)"
-      >
-        <el-table-column type="index" width="50" />
-        <el-table-column prop="gameTitle" label="游戏" width="150" />
-        <el-table-column prop="fileName" label="文件名" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="fullShotType" label="机体" width="120" />
-        <el-table-column prop="difficultyDisplay" label="难度" width="80" align="center">
-          <template #default="{ row }">
-            <el-tag :type="getDifficultyType(row.difficultyDisplay)" size="small">
-              {{ row.difficultyDisplay }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="formattedScore" label="分数" width="150" align="right" />
-        <el-table-column prop="stage" label="到达面" width="100" />
-        <el-table-column label="通关" width="80" align="center">
-          <template #default="{ row }">
-            <el-icon v-if="row.cleared" color="#67C23A"><CircleCheck /></el-icon>
-            <el-icon v-else color="#F56C6C"><CircleClose /></el-icon>
-          </template>
-        </el-table-column>
-        <el-table-column prop="gameDate" label="日期" width="150" />
-        <el-table-column label="操作" width="150" align="center" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" size="small" @click="viewDetails(row)">
-              详情
-            </el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <!-- Replay 详情对话框 -->
-    <el-dialog v-model="detailVisible" title="Replay 详情" width="700px">
-      <el-descriptions :column="2" border v-if="selectedReplay">
-        <el-descriptions-item label="文件名" :span="2">{{ selectedReplay.fileName }}</el-descriptions-item>
-        <el-descriptions-item label="游戏">{{ selectedReplay.gameTitle }}</el-descriptions-item>
-        <el-descriptions-item label="机体">{{ selectedReplay.fullShotType }}</el-descriptions-item>
-        <el-descriptions-item label="难度">
-          <el-tag :type="getDifficultyType(selectedReplay.difficultyDisplay)">
-            {{ selectedReplay.difficultyDisplay }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="分数">{{ selectedReplay.formattedScore }}</el-descriptions-item>
-        <el-descriptions-item label="到达面">{{ selectedReplay.stage }}</el-descriptions-item>
-        <el-descriptions-item label="通关">
-          <el-icon v-if="selectedReplay.cleared" color="#67C23A"><CircleCheck /></el-icon>
-          <el-icon v-else color="#F56C6C"><CircleClose /></el-icon>
-        </el-descriptions-item>
-        <el-descriptions-item label="游戏日期">{{ selectedReplay.gameDate }}</el-descriptions-item>
-        <el-descriptions-item label="慢速率">{{ selectedReplay.slowRate }}%</el-descriptions-item>
-        <el-descriptions-item label="总帧数">{{ selectedReplay.totalFrames }}</el-descriptions-item>
-      </el-descriptions>
-    </el-dialog>
+      </div>
+      <div class="card-body">
+        <div v-if="loading" class="loading">
+          加载中...
+        </div>
+        <div v-else-if="replays.length === 0" class="empty">
+          暂无 Replay 数据
+        </div>
+        <div v-else class="replays-table">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>游戏</th>
+                <th>难度</th>
+                <th>角色</th>
+                <th>分数</th>
+                <th>日期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="replay in filteredReplays" :key="replay.id">
+                <td>{{ replay.id }}</td>
+                <td>{{ getGameName(replay.gameId) }}</td>
+                <td>{{ replay.difficulty }}</td>
+                <td>{{ replay.character }}</td>
+                <td>{{ replay.score.toLocaleString() }}</td>
+                <td>{{ formatDate(replay.date) }}</td>
+                <td class="actions">
+                  <button class="action-button" @click="handleView(replay)">
+                    查看
+                  </button>
+                  <button class="action-button delete" @click="handleDelete(replay)">
+                    删除
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -89,76 +66,227 @@
 import { ref, computed, onMounted } from 'vue'
 import { useReplaysStore } from '../stores/replays'
 import { useGamesStore } from '../stores/games'
-import { ElMessage, ElMessageBox } from 'element-plus'
 
 const replaysStore = useReplaysStore()
 const gamesStore = useGamesStore()
 
-const filterGame = ref(null)
-const detailVisible = ref(false)
-const selectedReplay = ref(null)
+const loading = ref(false)
+const filterGame = ref('')
+
+const replays = computed(() => replaysStore.replays)
 
 const filteredReplays = computed(() => {
-  let list = replaysStore.replays
-  if (filterGame.value) {
-    list = list.filter(r => r.gameId === filterGame.value)
+  if (!filterGame.value) {
+    return replays.value
   }
-  return list
+  return replays.value.filter(replay => replay.gameId === filterGame.value)
 })
 
-const getDifficultyType = (diff) => {
-  const types = {
-    'E': '',
-    'N': 'success',
-    'H': 'warning',
-    'L': 'danger',
-    'Ex': 'danger'
-  }
-  return types[diff] || ''
+const getGameName = (gameId) => {
+  const game = gamesStore.games.find(g => g.id === gameId)
+  return game ? game.displayName : '未知游戏'
+}
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleString()
 }
 
 const handleScan = async () => {
-  const result = await replaysStore.scanNewReplays()
-  ElMessage.success(`扫描完成，导入 ${result.imported || 0} 个 Replay`)
-}
-
-const viewDetails = (replay) => {
-  selectedReplay.value = replay
-  detailVisible.value = true
-}
-
-const handleDelete = async (replay) => {
+  loading.value = true
   try {
-    await ElMessageBox.confirm('确定要删除这个 Replay 记录吗？', '提示', {
-      type: 'warning'
-    })
-    await replaysStore.deleteReplay(replay.id)
-    ElMessage.success('删除成功')
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败')
-    }
+    await replaysStore.scanReplays()
+  } finally {
+    loading.value = false
   }
 }
 
-onMounted(() => {
-  replaysStore.fetchReplays()
+const handleView = (replay) => {
+  console.log('查看 Replay:', replay)
+  // 实现查看 Replay 的逻辑
+}
+
+const handleDelete = async (replay) => {
+  if (confirm('确定要删除这个 Replay 吗？')) {
+    await replaysStore.deleteReplay(replay.id)
+  }
+}
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    await gamesStore.fetchGames()
+    await replaysStore.fetchReplays()
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
 <style scoped>
 .replays-page {
   padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.custom-select {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.custom-select:hover {
+  border-color: rgba(64, 158, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.custom-select option {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.replays-table {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: #fff;
+}
+
+tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.action-button.delete {
+  background: rgba(255, 87, 34, 0.2);
+  border-color: rgba(255, 87, 34, 0.4);
+}
+
+.action-button.delete:hover {
+  background: rgba(255, 87, 34, 0.3);
+  border-color: rgba(255, 87, 34, 0.6);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .custom-select {
+    width: 150px;
+  }
+  
+  th, td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
 }
 </style>

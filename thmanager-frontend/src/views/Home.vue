@@ -50,33 +50,30 @@
           已安装?点击这里配置安装路径
         </div>
         <div class="button-group">
-          <el-button 
-            type="primary" 
-            size="large"
+          <button 
+            class="primary-button"
             :disabled="gamesStore.isRunning"
             @click="handleLaunch"
           >
             {{ selectedGame.installed ? '启动游戏' : '安装游戏' }}
-          </el-button>
-          <el-button 
-            size="large"
+          </button>
+          <button 
+            class="secondary-button"
             @click="navigateToSettings"
           >
-            <el-icon><Setting /></el-icon>
-            设置
-          </el-button>
+            ⚙️ 设置
+          </button>
         </div>
       </div>
       
       <!-- 右上角统计按钮 -->
       <div class="top-right-buttons">
-        <el-button 
-          type="info" 
+        <button 
+          class="info-button" 
           @click="navigateToStatistics"
         >
-          <el-icon><DataAnalysis /></el-icon>
-          统计
-        </el-button>
+          📊 统计
+        </button>
       </div>
     </div>
     
@@ -87,7 +84,7 @@
         @click="toggleMusic"
         title="点击播放/暂停音乐"
       >
-        <el-icon size="24"><Headset /></el-icon>
+        🎵
       </div>
       <!-- 隐藏的实际音频元素 -->
       <audio 
@@ -99,23 +96,16 @@
         @error="handleAudioError"
       >
         您的浏览器不支持音频播放
-      </audio>
+       </audio>
     </div>
     
     <!-- 倒计时对话框 -->
-    <el-dialog
-      v-model="countdownVisible"
-      title="游戏启动"
-      width="300px"
-      :close-on-click-modal="false"
-      :show-close="false"
-      center
-    >
+    <div v-if="countdownVisible" class="countdown-dialog">
       <div class="countdown-content">
         <div class="countdown-number">{{ countdown }}</div>
         <div class="countdown-text">秒后启动游戏</div>
       </div>
-    </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -123,7 +113,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGamesStore } from '../stores/games'
-import { Setting, DataAnalysis, Headset } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const gamesStore = useGamesStore()
@@ -461,6 +450,66 @@ onMounted(async () => {
   justify-content: flex-end;
 }
 
+/* 按钮样式 */
+.primary-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.primary-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.secondary-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.secondary-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.info-button {
+  background: rgba(103, 194, 58, 0.3);
+  color: white;
+  border: 1px solid rgba(103, 194, 58, 0.5);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.info-button:hover {
+  background: rgba(103, 194, 58, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(103, 194, 58, 0.3);
+}
+
 /* 右上角按钮 */
 .top-right-buttons {
   position: absolute;
@@ -489,6 +538,7 @@ onMounted(async () => {
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
   transition: all 0.3s ease;
   border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 20px;
 }
 
 .music-button:hover {
@@ -496,18 +546,9 @@ onMounted(async () => {
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
-.music-button .el-icon {
-  color: #fff;
-  transition: all 0.3s ease;
-}
-
 /* 播放时的旋转动画 */
 .music-button.playing {
   animation: rotate 3s linear infinite;
-}
-
-.music-button.playing .el-icon {
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes rotate {
@@ -519,33 +560,40 @@ onMounted(async () => {
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
+/* 倒计时 */
+.countdown-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
-/* 倒计时 */
 .countdown-content {
   text-align: center;
-  padding: 20px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 300px;
 }
 
 .countdown-number {
   font-size: 72px;
   font-weight: bold;
   color: #409EFF;
+  margin-bottom: 20px;
 }
 
 .countdown-text {
   font-size: 16px;
-  color: #606266;
-  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* 响应式设计 */
