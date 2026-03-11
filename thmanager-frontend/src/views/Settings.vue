@@ -3,9 +3,14 @@
     <div class="card">
       <div class="card-header">
         <span>游戏路径设置</span>
-        <button class="primary-button" @click="saveSettings">
-          ✅ 保存设置
-        </button>
+        <div class="header-buttons">
+          <button class="secondary-button" @click="clearAllPaths">
+            🗑️ 清空所有路径
+          </button>
+          <button class="primary-button" @click="saveSettings">
+            ✅ 保存设置
+          </button>
+        </div>
       </div>
       <div class="card-body">
         <div class="alert info">
@@ -58,25 +63,27 @@ const gamePaths = ref({})
 
 const loadGamePaths = () => {
   gamesStore.games.forEach(game => {
-    gamePaths.value[game.id] = game.path || ''
+    gamePaths.value[game.id] = game.installPath || ''
   })
 }
 
 const saveSettings = async () => {
-  loading.value = true
-  try {
-    for (const [gameId, path] of Object.entries(gamePaths.value)) {
-      await gamesStore.updateGamePath(parseInt(gameId), path)
+    loading.value = true
+    try {
+      for (const [gameId, path] of Object.entries(gamePaths.value)) {
+        // 确保传递的是字符串格式的路径
+        const cleanPath = typeof path === 'string' ? path.trim() : ''
+        await gamesStore.updateGamePath(parseInt(gameId), cleanPath)
+      }
+      await gamesStore.fetchGames()
+      alert('设置保存成功！')
+    } catch (error) {
+      console.error('保存设置失败:', error)
+      alert('保存设置失败，请重试')
+    } finally {
+      loading.value = false
     }
-    await gamesStore.fetchGames()
-    alert('设置保存成功！')
-  } catch (error) {
-    console.error('保存设置失败:', error)
-    alert('保存设置失败，请重试')
-  } finally {
-    loading.value = false
   }
-}
 
 const browsePath = (gameId) => {
   // 这里可以实现文件选择对话框
@@ -84,6 +91,22 @@ const browsePath = (gameId) => {
   const path = prompt('请输入游戏安装路径:')
   if (path) {
     gamePaths.value[gameId] = path
+  }
+}
+
+const clearAllPaths = async () => {
+  if (confirm('确定要清空所有游戏的路径吗？此操作不可撤销。')) {
+    loading.value = true
+    try {
+      const result = await gamesStore.clearAllGamePaths()
+      loadGamePaths()
+      alert(`成功清空 ${result} 个游戏的路径！`)
+    } catch (error) {
+      console.error('清空路径失败:', error)
+      alert('清空路径失败，请重试')
+    } finally {
+      loading.value = false
+    }
   }
 }
 
@@ -122,6 +145,12 @@ onMounted(async () => {
   padding: 15px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.03);
+}
+
+.header-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .card-header span {

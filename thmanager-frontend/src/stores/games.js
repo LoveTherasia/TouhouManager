@@ -77,6 +77,17 @@ export const useGamesStore = defineStore('games', () => {
     }
   }
 
+  const clearAllGamePaths = async() => {
+    try{
+      const result = await gamesApi.clearAllGamePaths()
+      await fetchGames()
+      return result;
+    }catch(error){
+      console.error('Failed to clear all game paths:',error);
+      throw error;
+    }
+  }
+
   return {
     games,
     currentGame,
@@ -89,6 +100,7 @@ export const useGamesStore = defineStore('games', () => {
     launchGame,
     stopGame,
     checkStatus,
-    updateGamePath
+    updateGamePath,
+    clearAllGamePaths
   }
 })

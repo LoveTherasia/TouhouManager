@@ -156,16 +156,28 @@ public class Game {
 
         String[] exeNameParts = exeName.split("\\.(?=[^.]+$)");
         if (exeNameParts.length != 2) {
-            return installPath + "\\" + exeName;
+            String originalPath = installPath + File.separator + exeName;
+            File originalFile = new File(originalPath);
+            if (originalFile.exists() && originalFile.isFile()) {
+                return originalPath;
+            }
+            return null;
         }
+
         String exeNameWithC = exeNameParts[0] + "c." + exeNameParts[1];
-        String exePathWithC = installPath + "\\" + exeNameWithC;
+        String exePathWithC = installPath + File.separator + exeNameWithC;
 
         File fileWithC = new File(exePathWithC);
         if (fileWithC.exists() && fileWithC.isFile()) {
             return exePathWithC;
         }
 
-        return installPath + "\\" + exeName;
+        String originalPath = installPath + File.separator + exeName;
+        File originalFile = new File(originalPath);
+        if (originalFile.exists() && originalFile.isFile()) {
+            return originalPath;
+        }
+
+        return null;
     }
 }

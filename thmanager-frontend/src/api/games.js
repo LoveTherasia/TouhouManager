@@ -23,3 +23,7 @@ export const forceStopGame = () => {
 export const getGameStatus = () => {
   return request.get('/api/games/status')
 }
+
+export const clearAllGamePaths = () => {
+  return request.post('/api/games/clear-paths')
+}

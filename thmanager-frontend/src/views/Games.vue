@@ -37,7 +37,7 @@
                 </td>
                 <td>{{ game.version }}</td>
                 <td>{{ game.installed ? '已安装' : '未安装' }}</td>
-                <td class="game-path">{{ game.path || '未设置' }}</td>
+                <td class="game-path">{{ game.installPath || '未设置' }}</td>
                 <td class="actions">
                   <button class="action-button" @click="navigateToSettings(game)">
                     设置

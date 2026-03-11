@@ -22,7 +22,7 @@ import java.util.Optional;
  * 所有接口都映射在 /api/games 路径下。
  */
 @RestController
-@RequestMapping(value = "/api/games",method = RequestMethod.PUT)
+@RequestMapping("/api/games")
 public class GameController {
 
     /**
@@ -48,18 +48,6 @@ public class GameController {
     }
 
     /**
-     * 获取所有游戏列表
-     * 
-     * GET /api/games
-     * 
-     * @return 所有游戏的列表
-     */
-    @GetMapping
-    public List<Game> getGames() {
-        return gameDAO.findAll();
-    }
-
-    /**
      * 根据ID获取单个游戏详情
      * 
      * GET /api/games/{id}
@@ -78,21 +66,59 @@ public class GameController {
      * 
      * PUT /api/games/{id}/path
      * 
-     * @param id   游戏ID
-     * @param path 新的安装路径
+     * @param id      游戏ID
+     * @param request 包含路径的请求体
      * @return 更新后的游戏对象，如果游戏不存在则返回null
      */
     @PutMapping("/{id}/path")
-    public Game updateGamePath(@PathVariable int id, @RequestBody String path) {
+    public Game updateGamePath(@PathVariable int id, @RequestBody Map<String, Object> request) {
         Optional<Game> optionalGame = gameDAO.findById(id);
         if (optionalGame.isPresent()) {
             Game game = optionalGame.get();
+            // 处理不同格式的路径数据
+            String path = null;
+            Object pathObj = request.get("path");
+            if (pathObj instanceof String) {
+                path = (String) pathObj;
+            } else if (pathObj instanceof Map) {
+                // 处理嵌套的path对象
+                Map<?, ?> nestedMap = (Map<?, ?>) pathObj;
+                Object nestedPath = nestedMap.get("path");
+                if (nestedPath instanceof String) {
+                    path = (String) nestedPath;
+                }
+            }
+            // 清理路径
+            if (path != null) {
+                path = path.trim();
+                // 移除可能的引号
+                if (path.startsWith("\"") && path.endsWith("\"")) {
+                    path = path.substring(1, path.length() - 1);
+                }
+            }
             game.setInstallPath(path);
-            game.setInstalled(true);
+            game.setInstalled(path != null && !path.isEmpty());
             gameDAO.update(game);
             return game;
         }
         return null;
+    }
+
+    /**
+     * 获取所有游戏列表
+     * 
+     * GET /api/games
+     * 
+     * @return 所有游戏的列表
+     */
+    @GetMapping
+    public List<Game> getGames() {
+        List<Game> games = gameDAO.findAll();
+        for (Game game : games) {
+            String installPath = game.getInstallPath();
+            game.setInstalled(installPath != null && !installPath.trim().isEmpty());
+        }
+        return games;
     }
 
     /**
@@ -157,5 +183,26 @@ public class GameController {
     @DeleteMapping("/{id}")
     public void deleteGame(@PathVariable int id) {
         gameDAO.Delete(id);
+    }
+
+    /**
+     * 清空所有游戏的安装路径
+     * 
+     * POST /api/games/clear-paths
+     * 
+     * @return 清空成功的游戏数量
+     */
+    @PostMapping("/clear-paths")
+    public int clearAllGamePaths() {
+        List<Game> games = gameDAO.findAll();
+        int clearedCount = 0;
+        for (Game game : games) {
+            game.setInstallPath(null);
+            game.setInstalled(false);
+            if (gameDAO.update(game)) {
+                clearedCount++;
+            }
+        }
+        return clearedCount;
     }
 }
