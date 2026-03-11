@@ -1,20 +1,31 @@
 package com.thmanager.model;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-//游戏会话实体类
 @Data
+@TableName("play_sessions")
 public class PlaySession {
+    @TableId(type = IdType.AUTO)
     private int id;
-    private int gameId;// 关联的游戏ID
-    private LocalDateTime startTime;// 游戏开始时间
-    private LocalDateTime endTime;// 游戏结束时间
-    private long durationSeconds;// 持续秒数
-    private String sessionType;// 会话类型
-    private String note;// 备注
+    @TableField("game_id")
+    private int gameId;
+    @TableField("start_time")
+    private LocalDateTime startTime;
+    @TableField("end_time")
+    private LocalDateTime endTime;
+    @TableField("duration_seconds")
+    private long durationSeconds;
+    @TableField("session_type")
+    private String sessionType;
+    @TableField("note")
+    private String note;
 
     public enum SessionType {
         NORMAL("normal", "正常游玩"),
@@ -47,13 +58,11 @@ public class PlaySession {
         this.sessionType = SessionType.NORMAL.getCode();
     }
 
-    // 结束会话时计算时长
     public void endSession() {
         this.endTime = LocalDateTime.now();
         this.durationSeconds = Duration.between(this.startTime, this.endTime).toSeconds();
     }
 
-    // 格式化时长显示
     public String getFormattedDuration() {
         long hours = durationSeconds / 3600;
         long minutes = (durationSeconds % 3600) / 60;

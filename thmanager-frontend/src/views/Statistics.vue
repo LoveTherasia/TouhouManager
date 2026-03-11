@@ -1,5 +1,10 @@
 <template>
   <div class="statistics-page">
+    <div class="back-button-container">
+      <button class="back-button" @click="goHome">
+        ←
+      </button>
+    </div>
     <div class="tabs">
       <button 
         :class="['tab-button', { active: activeTab === 'statistics' }]"
@@ -120,10 +125,58 @@
                     <th>#</th>
                     <th>游戏</th>
                     <th>玩家</th>
-                    <th>难度</th>
-                    <th>分数</th>
-                    <th>关卡</th>
-                    <th>日期</th>
+                    <th class="sortable-header">
+                      <span class="header-text">难度</span>
+                      <span class="sort-icons">
+                        <span 
+                          :class="['sort-icon', 'up', { active: sortBy === 'difficulty' && sortOrder === 'asc' }]"
+                          @click="handleSort('difficulty', 'asc')"
+                        >▲</span>
+                        <span 
+                          :class="['sort-icon', 'down', { active: sortBy === 'difficulty' && sortOrder === 'desc' }]"
+                          @click="handleSort('difficulty', 'desc')"
+                        >▼</span>
+                      </span>
+                    </th>
+                    <th class="sortable-header">
+                      <span class="header-text">分数</span>
+                      <span class="sort-icons">
+                        <span 
+                          :class="['sort-icon', 'up', { active: sortBy === 'totalScore' && sortOrder === 'asc' }]"
+                          @click="handleSort('totalScore', 'asc')"
+                        >▲</span>
+                        <span 
+                          :class="['sort-icon', 'down', { active: sortBy === 'totalScore' && sortOrder === 'desc' }]"
+                          @click="handleSort('totalScore', 'desc')"
+                        >▼</span>
+                      </span>
+                    </th>
+                    <th class="sortable-header">
+                      <span class="header-text">关卡</span>
+                      <span class="sort-icons">
+                        <span 
+                          :class="['sort-icon', 'up', { active: sortBy === 'stage' && sortOrder === 'asc' }]"
+                          @click="handleSort('stage', 'asc')"
+                        >▲</span>
+                        <span 
+                          :class="['sort-icon', 'down', { active: sortBy === 'stage' && sortOrder === 'desc' }]"
+                          @click="handleSort('stage', 'desc')"
+                        >▼</span>
+                      </span>
+                    </th>
+                    <th class="sortable-header">
+                      <span class="header-text">日期</span>
+                      <span class="sort-icons">
+                        <span 
+                          :class="['sort-icon', 'up', { active: sortBy === 'date' && sortOrder === 'asc' }]"
+                          @click="handleSort('date', 'asc')"
+                        >▲</span>
+                        <span 
+                          :class="['sort-icon', 'down', { active: sortBy === 'date' && sortOrder === 'desc' }]"
+                          @click="handleSort('date', 'desc')"
+                        >▼</span>
+                      </span>
+                    </th>
                     <th>操作</th>
                   </tr>
                 </thead>
@@ -147,7 +200,31 @@
             </div>
             <div class="pagination" v-if="filteredReplays.length > 0">
               <div class="pagination-info">
-                共 {{ filteredReplays.length }} 条记录
+                共 {{ filteredReplays.length }} 条记录，第 {{ currentPage }} / {{ totalPages }} 页
+              </div>
+              <div class="pagination-buttons">
+                <button 
+                  class="pagination-button" 
+                  :disabled="currentPage === 1"
+                  @click="currentPage--"
+                >
+                  上一页
+                </button>
+                <button 
+                  v-for="page in visiblePages" 
+                  :key="page"
+                  :class="['pagination-button', { active: currentPage === page }]"
+                  @click="currentPage = page"
+                >
+                  {{ page }}
+                </button>
+                <button 
+                  class="pagination-button" 
+                  :disabled="currentPage === totalPages"
+                  @click="currentPage++"
+                >
+                  下一页
+                </button>
               </div>
             </div>
           </div>
@@ -159,9 +236,16 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useStatisticsStore } from '../stores/statistics'
 import { useGamesStore } from '../stores/games'
 import { useReplaysStore } from '../stores/replays'
+
+const router = useRouter()
+
+const goHome = () => {
+  router.push('/')
+}
 
 const statisticsStore = useStatisticsStore()
 const gamesStore = useGamesStore()
@@ -174,16 +258,115 @@ const replayFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-const filteredReplays = computed(() => {
-  if (!replayFilter.value) {
-    return replaysStore.replays
+const sortBy = ref('totalScore')
+const sortOrder = ref('desc')
+
+const handleSort = (field, order) => {
+  if (sortBy.value === field && sortOrder.value === order) {
+    sortBy.value = 'totalScore'
+    sortOrder.value = 'desc'
+  } else {
+    sortBy.value = field
+    sortOrder.value = order
   }
-  const filter = replayFilter.value.toLowerCase()
-  return replaysStore.replays.filter(replay => 
-    replay.gameTitle.toLowerCase().includes(filter) ||
-    replay.playerName.toLowerCase().includes(filter) ||
-    replay.difficulty.toLowerCase().includes(filter)
-  )
+  currentPage.value = 1
+}
+
+const sortReplays = (replays) => {
+  const sorted = [...replays]
+  
+  const difficultyOrder = {
+    'Easy': 0,
+    'E': 0,
+    'Normal': 1,
+    'N': 1,
+    'Hard': 2,
+    'H': 2,
+    'Lunatic': 3,
+    'L': 3,
+    'Extra': 4,
+    'Ex': 4,
+    'Phantasm': 5,
+    'Ph': 5
+  }
+  
+  sorted.sort((a, b) => {
+    let aVal, bVal
+    switch (sortBy.value) {
+      case 'difficulty':
+        aVal = difficultyOrder[a.difficulty] !== undefined ? difficultyOrder[a.difficulty] : 99
+        bVal = difficultyOrder[b.difficulty] !== undefined ? difficultyOrder[b.difficulty] : 99
+        break
+      case 'totalScore':
+        aVal = a.totalScore
+        bVal = b.totalScore
+        break
+      case 'stage':
+        aVal = a.stage
+        bVal = b.stage
+        break
+      case 'date':
+        aVal = a.date
+        bVal = b.date
+        break
+      default:
+        aVal = a.totalScore
+        bVal = b.totalScore
+    }
+    
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortOrder.value === 'asc' ? aVal - bVal : bVal - aVal
+    } else {
+      aVal = String(aVal || '')
+      bVal = String(bVal || '')
+      return sortOrder.value === 'asc' 
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal)
+    }
+  })
+  return sorted
+}
+
+const totalPages = computed(() => {
+  const count = filteredReplays.value.length;
+  const size = pageSize.value || 10;
+  console.log(filteredReplays);
+  console.log(filteredReplays.value.length);
+  return count == 0 ? 1 : Math.ceil(count / size);
+})
+
+const visiblePages = computed(() => {
+  const pages = []
+  const total = totalPages.value
+  const current = currentPage.value
+  
+  if (total <= 5) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    if (current <= 3) {
+      for (let i = 1; i <= 5; i++) pages.push(i)
+    } else if (current >= total - 2) {
+      for (let i = total - 4; i <= total; i++) pages.push(i)
+    } else {
+      for (let i = current - 2; i <= current + 2; i++) pages.push(i)
+    }
+  }
+  return pages
+})
+
+const filteredReplays = computed(() => {
+  let result
+  if (!replayFilter.value) {
+    result = replaysStore.replays
+  } else {
+    const filter = replayFilter.value.toLowerCase()
+    result = replaysStore.replays.filter(replay => 
+      replay.gameTitle.toLowerCase().includes(filter) ||
+      replay.playerName.toLowerCase().includes(filter) ||
+      replay.difficulty.toLowerCase().includes(filter)
+    )
+  }
+  return sortReplays(result)
 })
 
 const paginatedReplays = computed(() => {
@@ -242,6 +425,52 @@ onMounted(async () => {
   color: #fff;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+.back-button-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  z-index: 1000;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.back-button-container:hover .back-button {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.back-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.back-button:active {
+  transform: scale(0.95);
 }
 
 .tabs {
@@ -525,5 +754,76 @@ tr:hover {
 .score-highlight {
   font-weight: 700;
   color: #667eea;
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 4px;
+  margin-left: 20px;
+}
+
+.pagination-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.pagination-button.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 0%);
+  border-color: transparent;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sortable-header {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.header-text {
+  margin-right: 8px;
+}
+
+.sort-icons {
+  display: inline-flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  vertical-align: middle;
+}
+
+.sortable-header:hover .sort-icons {
+  opacity: 1;
+}
+
+.sort-icon {
+  font-size: 10px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 1px 0;
+}
+
+.sort-icon:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sort-icon.active {
+  color: #667eea;
+  opacity: 1;
 }
 </style>

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, callWithErrorHandling } from 'vue'
 import * as gamesApi from '../api/games'
 
 export const useGamesStore = defineStore('games', () => {
@@ -67,6 +67,16 @@ export const useGamesStore = defineStore('games', () => {
     }
   }
 
+  const updateGamePath = async(gameId,path) => {
+    try{
+      await gamesApi.updateGame(gameId,{path})
+      return true;
+    }catch(error){
+      console.error('Failed to update game path:',error);
+      throw error;
+    }
+  }
+
   return {
     games,
     currentGame,
@@ -78,6 +88,7 @@ export const useGamesStore = defineStore('games', () => {
     fetchGames,
     launchGame,
     stopGame,
-    checkStatus
+    checkStatus,
+    updateGamePath
   }
 })

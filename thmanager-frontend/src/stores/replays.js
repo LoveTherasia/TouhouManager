@@ -21,18 +21,18 @@ export const useReplaysStore = defineStore('replays', () => {
     replays.value.filter(r => r.cleared).length
   )
 
-  // Actions
-  const fetchReplays = async (params = {}) => {
-    loading.value = true
-    try {
-      const data = await replaysApi.getReplays(params)
-      replays.value = data
-    } catch (error) {
-      console.error('Failed to fetch replays:', error)
-    } finally {
-      loading.value = false
-    }
+const fetchReplays = async (params = {}) => {
+  loading.value = true
+  try {
+    const response = await replaysApi.getReplays(params)
+    // 从响应中提取 data 字段，因为后端返回的是分页对象
+    replays.value = response.data || response  // 兼容两种情况
+  } catch (error) {
+    console.error('Failed to fetch replays:', error)
+  } finally {
+    loading.value = false
   }
+}
 
   const fetchReplaysByGame = async (gameId) => {
     loading.value = true

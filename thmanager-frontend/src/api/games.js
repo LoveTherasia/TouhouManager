@@ -9,7 +9,7 @@ export const getGameById = (id) => {
 }
 
 export const updateGame = (id, data) => {
-  return request.put(`/api/games/${id}`, data)
+  return request.put(`/api/games/${id}/path`, data)
 }
 
 export const launchGame = (id, countdown = 3) => {
