@@ -20,31 +20,76 @@
       <div v-if="activeTab === 'statistics'" class="statistics-content">
         <div class="grid">
           <div class="card">
-            <div class="card-header">游戏时长统计</div>
+            <div class="card-header">总体概览</div>
             <div class="card-body">
               <div v-if="loading" class="loading">加载中...</div>
-              <div v-else class="chart-placeholder">
-                游戏时长统计图表
+              <div v-else class="stats-overview">
+                <div class="stat-item">
+                  <div class="stat-value">{{ statisticsStore.stats.totalGames }}</div>
+                  <div class="stat-label">游戏数量</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ statisticsStore.stats.totalReplays }}</div>
+                  <div class="stat-label">Replay 数量</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ formatPlayTime(statisticsStore.stats.totalPlayTime) }}</div>
+                  <div class="stat-label">总游玩时长</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ statisticsStore.stats.clearedCount }}</div>
+                  <div class="stat-label">通关次数</div>
+                </div>
               </div>
             </div>
           </div>
           <div class="card">
-            <div class="card-header">难度分布</div>
+            <div class="card-header">游戏时长排行</div>
             <div class="card-body">
               <div v-if="loading" class="loading">加载中...</div>
-              <div v-else class="chart-placeholder">
-                难度分布图表
+              <div v-else-if="statisticsStore.playTimeStats.length === 0" class="empty">暂无数据</div>
+              <div v-else class="playtime-list">
+                <div v-for="(item, index) in statisticsStore.playTimeStats" :key="item.gameId" class="playtime-item">
+                  <div class="playtime-rank">#{{ index + 1 }}</div>
+                  <div class="playtime-info">
+                    <div class="playtime-name">{{ item.gameName }}</div>
+                    <div class="playtime-detail">{{ item.replayCount }} 条 Replay</div>
+                  </div>
+                  <div class="playtime-time">{{ formatPlayTime(item.playTime) }}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
         
         <div class="card mt-20">
-          <div class="card-header">分数趋势</div>
+          <div class="card-header">最高分 TOP 20</div>
           <div class="card-body">
             <div v-if="loading" class="loading">加载中...</div>
-            <div v-else class="chart-placeholder">
-              分数趋势图表
+            <div v-else-if="statisticsStore.scoreStats.length === 0" class="empty">暂无数据</div>
+            <div v-else class="scores-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>游戏</th>
+                    <th>玩家</th>
+                    <th>难度</th>
+                    <th>分数</th>
+                    <th>日期</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(score, index) in statisticsStore.scoreStats" :key="score.id">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ score.gameTitle }}</td>
+                    <td>{{ score.playerName }}</td>
+                    <td>{{ score.difficulty }}</td>
+                    <td class="score-highlight">{{ formatScore(score.totalScore) }}</td>
+                    <td>{{ score.date ? score.date.split('T')[0] : '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -137,7 +182,7 @@ const filteredReplays = computed(() => {
   return replaysStore.replays.filter(replay => 
     replay.gameTitle.toLowerCase().includes(filter) ||
     replay.playerName.toLowerCase().includes(filter) ||
-    replay.difficultyDisplay.toLowerCase().includes(filter)
+    replay.difficulty.toLowerCase().includes(filter)
   )
 })
 
@@ -151,9 +196,17 @@ const formatScore = (score) => {
   return score.toLocaleString()
 }
 
+const formatPlayTime = (minutes) => {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours > 0) {
+    return `${hours}小时${mins}分钟`
+  }
+  return `${mins}分钟`
+}
+
 const viewReplay = (replay) => {
   console.log('查看 Replay:', replay)
-  // 实现查看 Replay 的逻辑
 }
 
 const handleSizeChange = (size) => {
@@ -171,6 +224,9 @@ onMounted(async () => {
   try {
     await gamesStore.fetchGames()
     await replaysStore.fetchReplays()
+    await statisticsStore.fetchStatistics()
+    await statisticsStore.fetchPlayTimeStats()
+    await statisticsStore.fetchScoreStats()
   } finally {
     loading.value = false
     replaysLoading.value = false
@@ -381,5 +437,91 @@ tr:hover {
     padding: 8px 10px;
     font-size: 14px;
   }
+}
+.stats-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.playtime-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.playtime-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.playtime-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.playtime-rank {
+  width: 40px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.playtime-info {
+  flex: 1;
+}
+
+.playtime-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.playtime-detail {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.playtime-time {
+  font-size: 14px;
+  font-weight: 600;
+  color: #764ba2;
+}
+
+.scores-table {
+  overflow-x: auto;
+}
+
+.score-highlight {
+  font-weight: 700;
+  color: #667eea;
 }
 </style>
