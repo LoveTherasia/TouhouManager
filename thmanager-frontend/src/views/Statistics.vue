@@ -237,9 +237,11 @@ onMounted(async () => {
 <style scoped>
 .statistics-page {
   padding: 20px;
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #fff;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .tabs {

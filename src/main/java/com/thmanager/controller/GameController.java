@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+//游戏信息控制类
 @RestController
 @RequestMapping("/api/games")
 public class GameController {

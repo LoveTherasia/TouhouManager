@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//统计信息获取控制类
 @RestController
 @RequestMapping("api/statistics")
 public class StatisticsController {
