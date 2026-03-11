@@ -85,6 +85,32 @@ CREATE TABLE IF NOT EXISTS replays (
     FOREIGN KEY (session_id) REFERENCES play_sessions(id)
     );
 
+-- 用户表
+CREATE TABLE IF NOT EXISTS users (
+                                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                     username TEXT NOT NULL UNIQUE,
+                                     email TEXT NOT NULL UNIQUE,
+                                     password TEXT NOT NULL,
+                                     avatar TEXT,
+                                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 邮箱验证码表
+CREATE TABLE IF NOT EXISTS verification_codes (
+                                                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                  email TEXT NOT NULL,
+                                                  code TEXT NOT NULL,
+                                                  type TEXT NOT NULL, -- register, reset_password
+                                                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                  expires_at TIMESTAMP NOT NULL
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_email ON verification_codes(email);
+
 CREATE INDEX IF NOT EXISTS idx_replays_game_difficulty ON replays(game_id, difficulty);
 CREATE INDEX IF NOT EXISTS idx_replays_game_shot ON replays(game_id, shot_type);
 CREATE INDEX IF NOT EXISTS idx_replays_score ON replays(game_id, difficulty, total_score DESC);
