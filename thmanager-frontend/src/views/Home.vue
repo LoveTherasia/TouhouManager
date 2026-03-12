@@ -66,7 +66,7 @@
         </div>
       </div>
       
-      <!-- 右上角统计按钮 -->
+      <!-- 右上角按钮 -->
       <div class="top-right-buttons">
         <button 
           class="info-button" 
@@ -74,6 +74,14 @@
         >
           📊 统计
         </button>
+        <div class="user-avatar" @click="showAuthModal = true">
+          <img 
+            v-if="userStore.user?.avatarUrl" 
+            :src="userStore.user.avatarUrl" 
+            alt="头像"
+          />
+          <span v-else class="avatar-placeholder"></span>
+        </div>
       </div>
     </div>
     
@@ -107,21 +115,169 @@
       </div>
     </div>
   </div>
+
+      <!-- 登录/注册模态框 -->
+    <div v-if="showAuthModal" class="auth-modal-overlay" @click.self="closeAuthModal">
+      <div class="auth-modal">
+        <button class="close-button" @click="closeAuthModal">&times;</button>
+        
+        <!-- 登录表单 -->
+        <div v-if="authMode === 'login'" class="auth-form">
+          <h2>登录</h2>
+          <div class="form-group">
+            <label>用户名/邮箱</label>
+            <input v-model="loginForm.usernameOrEmail" type="text" placeholder="请输入用户名或邮箱" />
+          </div>
+          <div class="form-group">
+            <label>密码</label>
+            <input v-model="loginForm.password" type="password" placeholder="请输入密码" />
+          </div>
+          <button class="submit-button" @click="handleLogin" :disabled="loginLoading">
+            {{ loginLoading ? '登录中...' : '登录' }}
+          </button>
+          <p class="switch-mode" @click="authMode = 'register'">
+            还没有账号？立即注册
+          </p>
+        </div>
+
+        <!-- 注册表单 -->
+        <div v-else class="auth-form">
+          <h2>注册</h2>
+          <div class="form-group">
+            <label>用户名</label>
+            <input v-model="registerForm.username" type="text" placeholder="请输入用户名（3-20位）" />
+          </div>
+          <div class="form-group">
+            <label>邮箱</label>
+            <input v-model="registerForm.email" type="email" placeholder="请输入邮箱" />
+          </div>
+          <div class="form-group code-group">
+            <label>验证码</label>
+            <input v-model="registerForm.verificationCode" type="text" placeholder="请输入验证码" />
+            <button 
+              class="send-code-button" 
+              @click="handleSendCode" 
+              :disabled="codeCountdown > 0 || !registerForm.email"
+            >
+              {{ codeCountdown > 0 ? `${codeCountdown}s` : '发送验证码' }}
+            </button>
+          </div>
+          <div class="form-group">
+            <label>密码</label>
+            <input v-model="registerForm.password" type="password" placeholder="请输入密码（6-15位）" />
+          </div>
+          <button class="submit-button" @click="handleRegister" :disabled="registerLoading">
+            {{ registerLoading ? '注册中...' : '注册' }}
+          </button>
+          <p class="switch-mode" @click="authMode = 'login'">
+            已有账号？立即登录
+          </p>
+        </div>
+      </div>
+    </div>
+
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGamesStore } from '../stores/games'
+import { useUserStore } from '../stores/user'
+import { authAPI } from '../api/auth'
 
 const router = useRouter()
 const gamesStore = useGamesStore()
+const userStore = useUserStore()
 
 const selectedGame = ref(null)
 const countdownVisible = ref(false)
 const countdown = ref(3)
 const audioPlayer = ref(null)
 const isPlaying = ref(false)
+
+//认证相关变量
+const showAuthModal = ref(false)
+const authMode = ref('login')
+const loginloading = ref(false)
+const registerLoading = ref(false)
+const codeCountdown = ref(0)
+
+const loginForm = ref({
+  usernameOrEmail: '',
+  password: ''
+})//登录信息
+
+const registerForm = ref({
+  username: '',
+  email: '',
+  verificationCode: '',
+  password: ''
+})//注册信息
+
+//关闭模态框
+const closeAuthModal = () =>{
+  showAuthModal.value = false
+  authMode.value = 'login'//讲模态框的样式重新设回默认样式，也就是登录样式
+  loginForm.value = {
+    usernameOrEmail: '',password:''
+  }//将登录信息清空
+  registerForm.value = {
+    username: '',password: '',verificationCode: '',password: ''
+  }
+}
+
+//登录
+const handleLogin = async () => {
+  if(!loginForm.value.usernameOrEmail || !loginForm.value.password){
+    alert("请填写完整信息")
+    return
+  }
+
+  loginLoading = true;
+  try{
+    const res = await authAPI.login(loginForm.value)
+    if(res.code === 200){
+      userStore.setToken(res.data.accessToken)
+      userStore.setUser(res.data.user)
+      closeAuthModal();//关闭模态框
+      alert("登录成功")
+    }else{
+      alert(res.message || '登录失败')
+    }
+  }catch(error){
+    console.error('登录错误:',error)
+    alert(error.response?.data?.message || '登录失败,请稍后重试')
+  }finally{
+    loginLoading.value = false;//退出加载状态
+  }
+}
+
+//注册功能
+const handleRegister = async () => {
+  if(!registerForm.value.username || !registerForm.value.email || !registerForm.value.password || !registerForm.value.verificationCode){
+    alert("请填写完整信息")
+    return
+  }
+
+  registerLoading = true;//加载注册
+  try{
+    const res = await authAPI.register(registerForm.value)
+    if(res.code === 200){
+      //放置token和user信息
+      userStore.setToken(res.data.accessToken)
+      userStore.setUser(res.data.user)
+      closeAuthModal();//关闭模态框
+      alert('注册成功')
+    }else{
+      alert(res.message || '注册失败')
+    }
+  }catch(error){
+    console.error('注册失败',error)
+    alert(error.response?.data?.message || '注册失败,请稍后重试')
+  }finally{
+      registerLoading.value = false;//退出加载状态
+  }
+}
 
 // 计算音乐按钮的旋转动画类
 const musicButtonClass = computed(() => ({
