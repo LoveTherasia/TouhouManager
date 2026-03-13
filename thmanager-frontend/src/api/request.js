@@ -1,14 +1,19 @@
 import axios from 'axios'
 
+const isDev = import.meta.env.DEV
+
+const baseURL = isDev 
+  ? '' 
+  : 'http://121.43.124.131:8080'
+
 const request = axios.create({
-  baseURL: '',
+  baseURL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// 请求拦截器
 request.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token')
@@ -22,7 +27,6 @@ request.interceptors.request.use(
   }
 )
 
-// 响应拦截器
 request.interceptors.response.use(
   response => {
     return response.data

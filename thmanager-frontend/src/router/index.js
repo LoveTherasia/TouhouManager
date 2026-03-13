@@ -4,6 +4,7 @@ import Games from '../views/Games.vue'
 import Replays from '../views/Replays.vue'
 import Statistics from '../views/Statistics.vue'
 import Settings from '../views/Settings.vue'
+import UserEdit from '../views/UserEdit.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings
+  },
+  {
+    path:'/user/edit',
+    name:'UserEdit',
+    component:UserEdit
   }
 ]
 

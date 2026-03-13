@@ -1,11 +1,9 @@
 import request from './request'
 
-const BASE_URL = "http://localhost:8080/api/auth"
-
 export const authAPI = {
     login(data){
         return request({
-            url: `${BASE_URL}/login`,
+            url: '/api/auth/login',
             method: 'post',
             data
         })
@@ -13,7 +11,7 @@ export const authAPI = {
 
     register(data){
         return request({
-            url: `${BASE_URL}/register`,
+            url: '/api/auth/register',
             method: 'post',
             data
         })
@@ -21,9 +19,24 @@ export const authAPI = {
 
     sendCode(email){
         return request({
-            url: `${BASE_URL}/send-code`,
+            url: '/api/auth/send-code',
             method: 'post',
             params: { email }
+        })
+    },
+
+    getUserProfile(){
+        return request({
+            url: '/api/user/me',
+            method: 'get'
+        })
+    },
+
+    updateUserProfile(data){
+        return request({
+            url: '/api/user/profile',
+            method: 'put',
+            data
         })
     }
 }

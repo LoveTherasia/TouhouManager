@@ -74,7 +74,7 @@
         >
           📊 统计
         </button>
-        <div class="user-avatar" @click="showAuthModal = true">
+        <div class="user-avatar" @click="handleUserAvatarClick">
           <img 
             v-if="userStore.user?.avatarUrl" 
             :src="userStore.user.avatarUrl" 
@@ -198,7 +198,7 @@ const isPlaying = ref(false)
 //认证相关变量
 const showAuthModal = ref(false)
 const authMode = ref('login')
-const loginloading = ref(false)
+const loginLoading = ref(false)
 const registerLoading = ref(false)
 const codeCountdown = ref(0)
 
@@ -233,7 +233,7 @@ const handleLogin = async () => {
     return
   }
 
-  loginLoading = true;
+  loginLoading.value = true;
   try{
     const res = await authAPI.login(loginForm.value)
     if(res.code === 200){
@@ -259,7 +259,7 @@ const handleRegister = async () => {
     return
   }
 
-  registerLoading = true;//加载注册
+  registerLoading.value = true;//加载注册
   try{
     const res = await authAPI.register(registerForm.value)
     if(res.code === 200){
@@ -276,6 +276,43 @@ const handleRegister = async () => {
     alert(error.response?.data?.message || '注册失败,请稍后重试')
   }finally{
       registerLoading.value = false;//退出加载状态
+  }
+}
+
+//发送验证码
+const handleSendCode = async() => {
+  if(!registerForm.value.email){
+    alert("请输入邮箱")
+    return
+  }
+
+  try{
+    const res = await authAPI.sendCode(registerForm.value.email)
+    if(res.code === 200){
+      alert("验证码已发送，请查收邮件")
+      codeCountdown.value = 60
+      //设置计时器
+      const timer = setInterval(() => {
+        codeCountdown --;
+        if(codeCountdown <= 0){
+          clearInterval(timer)
+        }
+      },1000)
+    }else{
+      alert(res.message || '发送失败,请稍后再试')
+    }
+  }catch(error){
+    console.error('发送验证码失败:',error)
+    alert(error.response?.data?.message || '发送失败，请稍后重试')
+  }
+}
+
+const handleUserAvatarClick = () =>{
+  if(userStore.isLoggedIn()){
+    //已登录，则跳转到用户编辑功能
+    router.push('/user/edit')
+  }else{
+    showAuthModal.value = true;
   }
 }
 
@@ -750,6 +787,190 @@ onMounted(async () => {
 .countdown-text {
   font-size: 16px;
   color: rgba(255, 255, 255, 0.8);
+}
+/* 用户头像 */
+.top-right-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 认证模态框 */
+.auth-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.auth-modal {
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 30, 50, 0.95) 100%);
+  border-radius: 16px;
+  padding: 40px;
+  min-width: 400px;
+  max-width: 90vw;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 28px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close-button:hover {
+  color: #fff;
+}
+
+.auth-form h2 {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.form-group input:focus {
+  border-color: rgba(102, 126, 234, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.code-group {
+  display: flex;
+  gap: 10px;
+}
+
+.code-group input {
+  flex: 1;
+}
+
+.send-code-button {
+  padding: 12px 16px;
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  border-radius: 8px;
+  background: rgba(102, 126, 234, 0.2);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s;
+}
+
+.send-code-button:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.4);
+}
+
+.send-code-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.switch-mode {
+  text-align: center;
+  color: rgba(102, 126, 234, 0.8);
+  cursor: pointer;
+  margin-top: 20px;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.switch-mode:hover {
+  color: #667eea;
+  text-decoration: underline;
 }
 
 /* 响应式设计 */
