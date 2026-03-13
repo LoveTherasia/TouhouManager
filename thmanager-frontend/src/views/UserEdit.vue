@@ -88,10 +88,22 @@ const updateUserProfile = async () => {
 const handleAvatarUpload = (event) => {
   const file = event.target.files[0]
   if (file) {
-    // 这里可以实现头像上传逻辑，暂时使用本地预览
+    const allowedTypes = ['/image/jpeg','/image/png']
+    if(!allowedTypes.includes(file.type)){
+        alert("请上传正确的图片文件")
+        return
+    }
+
+    //添加文件大小限制
+    const maxsize =  2 * 1024 * 1024
+    if(file.size > maxsize){
+        alert("图片大小不能超过2MB")
+        return
+    }
+
     const reader = new FileReader()
-    reader.onload = (e) => {
-      userForm.value.avatarUrl = e.target.result
+    reader.onload = (e) =>{
+        userForm.value.avatarUrl = e.target.result
     }
     reader.readAsDataURL(file)
   }
