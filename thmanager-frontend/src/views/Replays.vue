@@ -76,15 +76,33 @@ const filterGame = ref('')
 const replays = computed(() => replaysStore.replays)
 
 const filteredReplays = computed(() => {
-  if (!filterGame.value) {
-    return replays.value
+  let filtered = replays.value
+  if (filterGame.value) {
+    filtered = filtered.filter(replay => replay.gameId === filterGame.value)
   }
-  return replays.value.filter(replay => replay.gameId === filterGame.value)
+  // 按照gameId排序
+  return filtered.sort((a, b) => a.gameId - b.gameId)
 })
 
 const getGameName = (gameId) => {
-  const game = gamesStore.games.find(g => g.id === gameId)
-  return game ? game.displayName : '未知游戏'
+  const gameMap = {
+    1: '东方红魔乡',
+    2: '东方妖妖梦',
+    3: '东方永夜抄',
+    4: '东方花映冢',
+    5: '东方文花帖',
+    6: '东方风神录',
+    7: '东方地灵殿',
+    8: '东方星莲船',
+    9: '东方神灵庙',
+    10: '东方辉针城',
+    11: '东方绀珠传',
+    12: '东方天空璋',
+    13: '东方鬼形兽',
+    14: '东方虹龙洞',
+    15: '东方兽王园'
+  }
+  return gameMap[gameId] || '未知游戏'
 }
 
 const formatDate = (dateString) => {

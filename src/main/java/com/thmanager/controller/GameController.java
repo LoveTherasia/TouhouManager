@@ -6,6 +6,7 @@ import com.thmanager.service.GameLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -168,9 +169,10 @@ public class GameController {
      */
     @GetMapping("/status")
     public Map<String, Object> getGameStatus() {
-        return Map.of(
-                "running", gameLauncher.isGameRunning(),
-                "currentGame", gameLauncher.getCurrentGame().orElse(null));
+        Map<String, Object> status = new HashMap<>();
+        status.put("running", gameLauncher.isGameRunning());
+        status.put("currentGame", gameLauncher.getCurrentGame().orElse(null));
+        return status;
     }
 
     /**

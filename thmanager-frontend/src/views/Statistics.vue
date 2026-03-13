@@ -87,11 +87,11 @@
                 <tbody>
                   <tr v-for="(score, index) in statisticsStore.scoreStats" :key="score.id">
                     <td>{{ index + 1 }}</td>
-                    <td>{{ score.gameTitle }}</td>
+                    <td>{{ getGameName(score.gameId) }}</td>
                     <td>{{ score.playerName }}</td>
                     <td>{{ score.difficulty }}</td>
                     <td class="score-highlight">{{ formatScore(score.totalScore) }}</td>
-                    <td>{{ score.date ? score.date.split('T')[0] : '-' }}</td>
+                    <td>{{ score.gameDate ? score.gameDate.split('T')[0] : '-' }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -183,12 +183,12 @@
                 <tbody>
                   <tr v-for="(replay, index) in paginatedReplays" :key="replay.id">
                     <td>{{ index + 1 }}</td>
-                    <td>{{ replay.gameTitle }}</td>
+                    <td>{{ getGameName(replay.gameId) }}</td>
                     <td>{{ replay.playerName }}</td>
                     <td>{{ replay.difficultyDisplay }}</td>
                     <td>{{ formatScore(replay.totalScore) }}</td>
-                    <td>{{ replay.stage }}</td>
-                    <td>{{ replay.date }}</td>
+                    <td>{{ replay.difficulty === 'Ex' || replay.difficulty === 'Extra' ? '-' : replay.reachedStageNumber }}</td>
+                    <td>{{ replay.gameDate ? replay.gameDate.split('T')[0] : '-' }}</td>
                     <td class="actions">
                       <button class="action-button" @click="viewReplay(replay)">
                         查看
@@ -302,12 +302,12 @@ const sortReplays = (replays) => {
         bVal = b.totalScore
         break
       case 'stage':
-        aVal = a.stage
-        bVal = b.stage
+        aVal = a.reachedStageNumber
+        bVal = b.reachedStageNumber
         break
       case 'date':
-        aVal = a.date
-        bVal = b.date
+        aVal = a.gameDate
+        bVal = b.gameDate
         break
       default:
         aVal = a.totalScore
@@ -361,7 +361,7 @@ const filteredReplays = computed(() => {
   } else {
     const filter = replayFilter.value.toLowerCase()
     result = replaysStore.replays.filter(replay => 
-      replay.gameTitle.toLowerCase().includes(filter) ||
+      getGameName(replay.gameId).toLowerCase().includes(filter) ||
       replay.playerName.toLowerCase().includes(filter) ||
       replay.difficulty.toLowerCase().includes(filter)
     )
@@ -386,6 +386,26 @@ const formatPlayTime = (minutes) => {
     return `${hours}小时${mins}分钟`
   }
   return `${mins}分钟`
+}
+
+const getGameName = (gameId) => {
+  const gameMap = {
+    1: '东方红魔乡',
+    2: '东方妖妖梦',
+    3: '东方永夜抄',
+    4: '东方花映冢',
+    5: '东方风神录',
+    6: '东方地灵殿',
+    7: '东方星莲船',
+    8: '东方神灵庙',
+    9: '东方辉针城',
+    10: '东方绀珠传',
+    11: '东方天空璋',
+    12: '东方鬼形兽',
+    13: '东方虹龙洞',
+    14: '东方兽王园'
+  }
+  return gameMap[gameId] || '未知游戏'
 }
 
 const viewReplay = (replay) => {

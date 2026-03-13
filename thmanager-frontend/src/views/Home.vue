@@ -403,6 +403,12 @@ const handleLaunch = async () => {
   if (!selectedGame.value) return
   
   if (selectedGame.value.installed) {
+    // 暂停音乐
+    if (audioPlayer.value && isPlaying.value) {
+      audioPlayer.value.pause()
+      isPlaying.value = false
+    }
+    
     // 启动游戏
     countdownVisible.value = true
     countdown.value = 3
@@ -453,6 +459,26 @@ onMounted(async () => {
       playGameMusic(firstGame)
     }, 100)
   }
+  
+  // 轮询检查游戏状态，当游戏结束时继续播放音乐
+  let isGameRunning = false
+  setInterval(async () => {
+    await gamesStore.checkStatus()
+    const currentRunning = gamesStore.isRunning
+    
+    // 如果游戏从运行状态变为非运行状态，且之前有音乐在播放，则继续播放音乐
+    if (isGameRunning && !currentRunning && selectedGame.value) {
+      if (audioPlayer.value && !isPlaying.value) {
+        audioPlayer.value.play().then(() => {
+          isPlaying.value = true
+        }).catch(e => {
+          console.log('音乐播放失败:', e)
+        })
+      }
+    }
+    
+    isGameRunning = currentRunning
+  }, 2000) // 每2秒检查一次
 })
 </script>
 

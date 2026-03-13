@@ -1,17 +1,17 @@
-import request from './request'
+import {localRequest} from './request'
 
 export const getStatistics = () => {
-  return request.get('/api/statistics')
+  return localRequest.get('/api/statistics')
 }
 
 export const getGameStatistics = (gameId) => {
-  return request.get(`/api/statistics/game/${gameId}`)
+  return localRequest.get(`/api/statistics/game/${gameId}`)
 }
 
 export const getPlayTimeStats = () => {
-  return request.get('/api/statistics/playtime')
+  return localRequest.get('/api/statistics/playtime')
 }
 
 export const getScoreStats = () => {
-  return request.get('/api/statistics/scores')
+  return localRequest.get('/api/statistics/scores')
 }

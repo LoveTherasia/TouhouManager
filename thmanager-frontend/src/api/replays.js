@@ -1,25 +1,25 @@
-import request from './request'
+import { localRequest } from './request'
 
 export const getReplays = (params) => {
-  return request.get('/api/replays', { params })
+  return localRequest.get('/api/replays', { params })
 }
 
 export const getReplaysByGame = (gameId) => {
-  return request.get(`/api/replays/game/${gameId}`)
+  return localRequest.get(`/api/replays/game/${gameId}`)
 }
 
 export const getReplayById = (id) => {
-  return request.get(`/api/replays/${id}`)
+  return localRequest.get(`/api/replays/${id}`)
 }
 
 export const deleteReplay = (id) => {
-  return request.delete(`/api/replays/${id}`)
+  return localRequest.delete(`/api/replays/${id}`)
 }
 
 export const exportReplay = (id) => {
-  return request.get(`/api/replays/${id}/export`)
+  return localRequest.get(`/api/replays/${id}/export`)
 }
 
 export const scanReplays = () => {
-  return request.post('/api/replays/scan')
+  return localRequest.post('/api/replays/scan')
 }

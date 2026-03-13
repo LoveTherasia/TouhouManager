@@ -4,6 +4,7 @@ import com.thmanager.dao.GameDAO;
 import com.thmanager.dao.PlaySessionDAO;
 import com.thmanager.model.Game;
 import com.thmanager.model.PlaySession;
+import com.thmanager.service.ReplayWatcherService;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors;
 public class GameLauncher {
     private final GameDAO gameDAO;
     private final PlaySessionDAO sessionDAO;
+    private final ReplayWatcherService replayWatcherService;
     private final ExecutorService executor;
     private Process currentProcess;
     private PlaySession currentSession;
@@ -26,9 +28,10 @@ public class GameLauncher {
     private Runnable onGameStart;
     private Runnable onGameEnd;
 
-    public GameLauncher(GameDAO gameDAO, PlaySessionDAO sessionDAO) {
+    public GameLauncher(GameDAO gameDAO, PlaySessionDAO sessionDAO, ReplayWatcherService replayWatcherService) {
         this.gameDAO = gameDAO;
         this.sessionDAO = sessionDAO;
+        this.replayWatcherService = replayWatcherService;
         this.executor = Executors.newSingleThreadExecutor();
     }
 
@@ -112,6 +115,10 @@ public class GameLauncher {
                 System.out.println("[GameLauncher] 调用onGameStart回调");
                 onGameStart.run();
             }
+
+            // 确保游戏的replay文件夹被监控
+            System.out.println("[GameLauncher] 注册游戏replay文件夹到监控服务");
+            replayWatcherService.registerGame(game);
 
             // 启动监控线程
             System.out.println("[GameLauncher] 启动监控线程");

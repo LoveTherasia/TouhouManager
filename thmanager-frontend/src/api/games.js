@@ -1,29 +1,30 @@
-import request from './request'
+import { localRequest } from './request'
 
+//游戏信息都是从本地应用后端接口获取
 export const getGames = () => {
-  return request.get('/api/games')
+  return localRequest.get('/api/games')
 }
 
 export const getGameById = (id) => {
-  return request.get(`/api/games/${id}`)
+  return localRequest.get(`/api/games/${id}`)
 }
 
 export const updateGame = (id, data) => {
-  return request.put(`/api/games/${id}/path`, data)
+  return localRequest.put(`/api/games/${id}/path`, data)
 }
 
 export const launchGame = (id, countdown = 3) => {
-  return request.post(`/api/games/${id}/launch`, { countdown })
+  return localRequest.post(`/api/games/${id}/launch`, { countdown })
 }
 
 export const forceStopGame = () => {
-  return request.post('/api/games/force-stop')
+  return localRequest.post('/api/games/force-stop')
 }
 
 export const getGameStatus = () => {
-  return request.get('/api/games/status')
+  return localRequest.get('/api/games/status')
 }
 
 export const clearAllGamePaths = () => {
-  return request.post('/api/games/clear-paths')
+  return localRequest.post('/api/games/clear-paths')
 }

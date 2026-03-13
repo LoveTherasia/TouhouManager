@@ -1,8 +1,10 @@
-import request from './request'
+// src/api/auth.js
+import { remoteRequest } from './request'
 
+//这里注册登录发送验证码都是调用服务器端的接口
 export const authAPI = {
     login(data){
-        return request({
+        return remoteRequest({
             url: '/api/auth/login',
             method: 'post',
             data
@@ -10,7 +12,7 @@ export const authAPI = {
     },
 
     register(data){
-        return request({
+        return remoteRequest({
             url: '/api/auth/register',
             method: 'post',
             data
@@ -18,7 +20,7 @@ export const authAPI = {
     },
 
     sendCode(email){
-        return request({
+        return remoteRequest({
             url: '/api/auth/send-code',
             method: 'post',
             params: { email }
@@ -26,14 +28,14 @@ export const authAPI = {
     },
 
     getUserProfile(){
-        return request({
+        return remoteRequest({
             url: '/api/user/me',
             method: 'get'
         })
     },
 
     updateUserProfile(data){
-        return request({
+        return remoteRequest({
             url: '/api/user/profile',
             method: 'put',
             data
