@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import { mockPlugin } from './mock/plugin.js'
 
-const useCloudServer = true
+const useMock = true // 使用 mock 数据
 
 const cloudApiTarget = 'http://121.43.124.131:8080'
 const localApiTarget = 'http://localhost:8080'
@@ -10,7 +11,7 @@ const cloudWsTarget = 'ws://121.43.124.131:8080'
 const localWsTarget = 'ws://localhost:8080'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: useMock ? [vue(), mockPlugin()] : [vue()],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
@@ -18,9 +19,9 @@ export default defineConfig({
   },
   server: {
     port: 3001,
-    proxy: {
+    proxy: useMock ? {} : {
       '/api/auth': {
-        target: useCloudServer ? cloudApiTarget : localApiTarget,
+        target: cloudApiTarget,
         changeOrigin: true
       },
       '/api': {
@@ -28,7 +29,7 @@ export default defineConfig({
         changeOrigin: true
       },
       '/ws': {
-        target: useCloudServer ? cloudWsTarget : localWsTarget,
+        target: cloudWsTarget,
         ws: true
       }
     }
