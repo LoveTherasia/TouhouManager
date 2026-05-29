@@ -23,13 +23,25 @@ export function getGamePlayTimeMinutes(game) {
 }
 
 export function getGameDisplayName(game) {
-  return game.displayName || game.titleCn || game.titleJa || `Game ${game.id}`
+  const raw = game.titleCn || game.titleJa || game.displayName
+  if (!raw) return `Game ${game.id}`
+  // 兼容旧 API 返回的 "TH07 - 东方妖妖梦" 格式
+  return raw.replace(/^TH\d+\s*[-–—]\s*/, '')
 }
 
 export function getGameShortName(game) {
   if (game.shortName) return game.shortName
   if (game.gameNumber) return `th${String(game.gameNumber).padStart(2, '0')}`
   return `game-${game.id}`
+}
+
+/** 封面图 URL，优先 API 字段，否则按 thXX_title 规则推断 */
+export function getGameCoverUrl(game) {
+  if (game.coverImage) return game.coverImage
+  const sn = getGameShortName(game)
+  const num = game.gameNumber ?? parseInt(sn.replace(/\D/g, ''), 10)
+  const ext = [11, 15, 18, 19].includes(num) ? 'png' : 'jpg'
+  return `/image/cover/${sn}_title.${ext}`
 }
 
 export function getDifficultyLabel(difficulty) {

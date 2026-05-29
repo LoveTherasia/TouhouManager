@@ -102,15 +102,20 @@ public class Game {
     private LocalDateTime createdAt;
 
     /**
-     * 获取格式化的显示名称
-     * 
-     * 格式为：THXX - 标题
-     * 优先显示中文标题，如果中文标题不存在则显示日文标题
-     * 
-     * @return 格式化的游戏显示名称
+     * 获取游戏显示名称（仅标题，不含 TH 代号）
      */
     public String getDisplayName() {
-        return String.format("TH%02d - %s", gameNumber, titleCn != null ? titleCn : titleJa);
+        if (titleCn != null && !titleCn.isBlank()) {
+            return titleCn;
+        }
+        return titleJa;
+    }
+
+    /**
+     * 带 TH 代号的完整目录名，用于日志等场景
+     */
+    public String getCatalogLabel() {
+        return String.format("TH%02d - %s", gameNumber, getDisplayName());
     }
 
     /**

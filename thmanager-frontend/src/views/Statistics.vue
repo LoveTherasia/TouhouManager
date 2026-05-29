@@ -113,7 +113,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useStatisticsStore } from '@/stores/statistics'
 import { useGamesStore } from '@/stores/games'
 import { useReplaysStore } from '@/stores/replays'
-import { formatScore, formatPlayTime } from '@/utils/format'
+import { formatScore, formatPlayTime, getGameDisplayName } from '@/utils/format'
 import AppShell from '@/components/layout/AppShell.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTabs from '@/components/ui/AppTabs.vue'
@@ -149,7 +149,7 @@ const overviewItems = computed(() => [
 
 const gameNameMap = computed(() => {
   const map = {}
-  gamesStore.games.forEach(g => { map[g.id] = g.displayName || g.titleCn })
+  gamesStore.games.forEach(g => { map[g.id] = getGameDisplayName(g) })
   return map
 })
 

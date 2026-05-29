@@ -1,16 +1,10 @@
 // Mock 数据服务
 
-const touhouImages = [
-  "https://api.swan416.top/api/files/pic/20260524/a9dae11afd2b4286a0803cbb0b8762c3.jpg",
-  "https://api.swan416.top/api/files/pic/20260524/5323f07b1b164895bac0021b2f1df5b5.png",
-  "https://api.swan416.top/api/files/pic/20260522/90cba2a21d22495b9c498247f056ecbc.jpg",
-  "https://api.swan416.top/api/files/pic/20260522/9a8ad7fb45004324b808a48f63ce0107.jpg",
-  "https://api.swan416.top/api/files/pic/20260509/c3f9ab40d357481eb931fbf437153330.jpg",
-  "https://api.swan416.top/api/files/pic/20260509/d13c325a520d482e82cbc92f6c7a1660.jpg",
-  "https://api.swan416.top/api/files/pic/20260509/15b2763089a847a78d51dfad8492531e.jpg",
-  "https://api.swan416.top/api/files/pic/20260428/b0a58b620b734bd2bcb966f454a5038c.png",
-  "https://api.swan416.top/api/files/pic/20260426/e1e06996338445e69ddb04479bff5132.png"
-]
+function coverFor(shortName) {
+  const pngVersions = new Set(['th11', 'th15', 'th18', 'th19'])
+  const ext = pngVersions.has(shortName) ? 'png' : 'jpg'
+  return `/image/cover/${shortName}_title.${ext}`
+}
 
 const mockGames = [
   {
@@ -20,7 +14,7 @@ const mockGames = [
     version: "th06",
     installed: true,
     installPath: "D:\\Games\\Touhou\\th06",
-    coverImage: touhouImages[0],
+    coverImage: coverFor('th06'),
     description: "东方 Project 第 6 作，首次引入符卡系统",
     playTime: 450
   },
@@ -31,7 +25,7 @@ const mockGames = [
     version: "th07",
     installed: true,
     installPath: "D:\\Games\\Touhou\\th07",
-    coverImage: touhouImages[1],
+    coverImage: coverFor('th07'),
     description: "东方 Project 第 7 作，引入季节系统",
     playTime: 320
   },
@@ -42,7 +36,7 @@ const mockGames = [
     version: "th08",
     installed: false,
     installPath: null,
-    coverImage: touhouImages[2],
+    coverImage: coverFor('th08'),
     description: "东方 Project 第 8 作，昼夜系统",
     playTime: 0
   },
@@ -53,7 +47,7 @@ const mockGames = [
     version: "th10",
     installed: true,
     installPath: "D:\\Games\\Touhou\\th10",
-    coverImage: touhouImages[3],
+    coverImage: coverFor('th10'),
     description: "东方 Project 第 10 作，回归原点之作",
     playTime: 280
   },
@@ -64,7 +58,7 @@ const mockGames = [
     version: "th11",
     installed: true,
     installPath: "D:\\Games\\Touhou\\th11",
-    coverImage: touhouImages[4],
+    coverImage: coverFor('th11'),
     description: "东方 Project 第 11 作，地底世界",
     playTime: 200
   },
@@ -75,7 +69,7 @@ const mockGames = [
     version: "th12",
     installed: false,
     installPath: null,
-    coverImage: touhouImages[5],
+    coverImage: coverFor('th12'),
     description: "东方 Project 第 12 作，宇宙与佛教",
     playTime: 0
   }

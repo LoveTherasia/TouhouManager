@@ -18,10 +18,10 @@
       >
         <div class="game-card__cover">
           <CoverImage
-            :src="game.coverImage"
+            :src="getGameCoverUrl(game)"
             :alt="getGameDisplayName(game)"
             variant="banner"
-            aspect-ratio="16 / 9"
+            aspect-ratio="1 / 1"
             interactive
           />
           <AppBadge :variant="game.installed ? 'success' : 'default'" class="game-card__badge">
@@ -45,7 +45,7 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGamesStore } from '@/stores/games'
-import { getGameDisplayName, getGameShortName, getGamePlayTimeMinutes, formatPlayTime } from '@/utils/format'
+import { getGameDisplayName, getGameShortName, getGamePlayTimeMinutes, getGameCoverUrl, formatPlayTime } from '@/utils/format'
 import AppShell from '@/components/layout/AppShell.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'

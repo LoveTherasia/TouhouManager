@@ -44,7 +44,7 @@ const props = defineProps({
   alt: { type: String, default: '' },
   /** 固定外框比例，原图任意比例都在框内完整展示 */
   aspectRatio: { type: String, default: '3 / 4' },
-  /** card=游戏库缩略图 hero=详情大图 banner=宽图 */
+  /** card=游戏库缩略图(1:1) hero=详情大图 banner=宽图 */
   variant: { type: String, default: 'card' },
   /** 允许 hover 时前景轻微放大 */
   interactive: { type: Boolean, default: false },
@@ -58,7 +58,13 @@ const errored = ref(false)
 const resolvedSrc = computed(() => (errored.value ? props.fallback : props.src) || props.fallback)
 
 const frameStyle = computed(() => {
-  const style = { aspectRatio: props.aspectRatio }
+  const ratioByVariant = {
+    card: '1 / 1',
+    hero: '3 / 4',
+    banner: '16 / 9',
+    fill: props.aspectRatio
+  }
+  const style = { aspectRatio: ratioByVariant[props.variant] || props.aspectRatio }
   if (props.width) style.width = props.width
   if (props.height) style.height = props.height
   return style
@@ -135,12 +141,13 @@ const onError = () => { errored.value = true }
 
 /* ── 尺寸变体 ── */
 .cover-image--card {
-  width: var(--library-thumb-width, 132px);
+  width: var(--library-thumb-size, 132px);
   border-radius: var(--radius-md, 10px);
 }
 
 .cover-image--hero {
   width: clamp(220px, 26vw, 360px);
+  aspect-ratio: 1 / 1;
   border-radius: var(--radius-lg, 16px);
   box-shadow: var(--shadow-panel, 0 8px 32px rgba(0, 0, 0, 0.45));
 }

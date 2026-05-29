@@ -6,7 +6,7 @@
         v-if="selectedGame"
         :key="selectedGame.id"
         class="launcher__bg"
-        :style="{ backgroundImage: `url('${selectedGame.coverImage}')` }"
+        :style="{ backgroundImage: `url('${getGameCoverUrl(selectedGame)}')` }"
       />
     </Transition>
     <div class="launcher__vignette" />
@@ -56,7 +56,7 @@
           >
             <div class="library-card__cover">
               <CoverImage
-                :src="game.coverImage"
+                :src="getGameCoverUrl(game)"
                 :alt="getGameDisplayName(game)"
                 variant="card"
                 interactive
@@ -109,7 +109,7 @@
 
         <div class="launcher__hero-visual">
           <CoverImage
-            :src="selectedGame.coverImage"
+            :src="getGameCoverUrl(selectedGame)"
             :alt="getGameDisplayName(selectedGame)"
             variant="hero"
           />
@@ -171,7 +171,7 @@ import { useRouter } from 'vue-router'
 import { useGamesStore } from '@/stores/games'
 import { useUserStore } from '@/stores/user'
 import { useGameMusic } from '@/composables/useGameMusic'
-import { formatPlayTime, getGameDisplayName, getGameShortName, getGamePlayTimeMinutes } from '@/utils/format'
+import { formatPlayTime, getGameDisplayName, getGameShortName, getGamePlayTimeMinutes, getGameCoverUrl } from '@/utils/format'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppLoading from '@/components/ui/AppLoading.vue'

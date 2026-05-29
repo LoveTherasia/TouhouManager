@@ -3,6 +3,7 @@ package com.thmanager.controller;
 import com.thmanager.model.Game;
 import com.thmanager.dao.GameDAO;
 import com.thmanager.service.GameLauncher;
+import com.thmanager.util.GameCoverResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,6 +60,7 @@ public class GameController {
     @GetMapping("/{id}")
     public Game getGame(@PathVariable int id) {
         Optional<Game> game = gameDAO.findById(id);
+        game.ifPresent(this::enrichGame);
         return game.orElse(null);
     }
 
@@ -100,6 +102,7 @@ public class GameController {
             game.setInstallPath(path);
             game.setInstalled(path != null && !path.isEmpty());
             gameDAO.update(game);
+            enrichGame(game);
             return game;
         }
         return null;
@@ -116,10 +119,15 @@ public class GameController {
     public List<Game> getGames() {
         List<Game> games = gameDAO.findAll();
         for (Game game : games) {
-            String installPath = game.getInstallPath();
-            game.setInstalled(installPath != null && !installPath.trim().isEmpty());
+            enrichGame(game);
         }
         return games;
+    }
+
+    private void enrichGame(Game game) {
+        String installPath = game.getInstallPath();
+        game.setInstalled(installPath != null && !installPath.trim().isEmpty());
+        GameCoverResolver.applyIfMissing(game);
     }
 
     /**

@@ -3,12 +3,35 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import { mockPlugin } from './mock/plugin.js'
 
-const useMock = true // 使用 mock 数据
+const useMock = false // 使用 mock 数据
 
 const cloudApiTarget = 'http://121.43.124.131:8080'
 const localApiTarget = 'http://localhost:8080'
 const cloudWsTarget = 'ws://121.43.124.131:8080'
 const localWsTarget = 'ws://localhost:8080'
+
+const devProxy = {
+  '/api/auth': {
+    target: cloudApiTarget,
+    changeOrigin: true
+  },
+  '/api': {
+    target: localApiTarget,
+    changeOrigin: true
+  },
+  '/image': {
+    target: localApiTarget,
+    changeOrigin: true
+  },
+  '/music': {
+    target: localApiTarget,
+    changeOrigin: true
+  },
+  '/ws': {
+    target: cloudWsTarget,
+    ws: true
+  }
+}
 
 export default defineConfig({
   plugins: useMock ? [vue(), mockPlugin()] : [vue()],
@@ -19,19 +42,9 @@ export default defineConfig({
   },
   server: {
     port: 3001,
-    proxy: useMock ? {} : {
-      '/api/auth': {
-        target: cloudApiTarget,
-        changeOrigin: true
-      },
-      '/api': {
-        target: localApiTarget,
-        changeOrigin: true
-      },
-      '/ws': {
-        target: cloudWsTarget,
-        ws: true
-      }
-    }
+    proxy: useMock ? {
+      '/image': { target: localApiTarget, changeOrigin: true },
+      '/music': { target: localApiTarget, changeOrigin: true }
+    } : devProxy
   }
 })
