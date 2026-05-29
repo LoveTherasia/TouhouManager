@@ -39,6 +39,15 @@ export function mockPlugin() {
         }
         next()
       })
+
+      server.middlewares.use('/api/images', (req, res, next) => {
+        if (req.method === 'GET') {
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify(mockData.images))
+          return
+        }
+        next()
+      })
     }
   }
 }
