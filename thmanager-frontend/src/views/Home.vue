@@ -1,10 +1,10 @@
 <template>
   <div class="home-container">
     <!-- 背景图片（模糊放大版） -->
-    <div 
-      v-if="selectedGame" 
+    <div
+      v-if="selectedGame"
       class="background-image"
-      :style="{ backgroundImage: `url('/image/main/${selectedGame.shortName}.jpg')` }"
+      :style="{ backgroundImage: `url('${selectedGame.coverImage}')` }"
     ></div>
     
     <!-- 侧边栏 -->
@@ -21,8 +21,8 @@
           @click="selectGame(game)"
         >
           <div class="game-avatar">
-            <img 
-              :src="`/image/avatar/${game.shortName}.jpg`" 
+            <img
+              :src="game.coverImage"
               :alt="game.displayName"
               @error="handleImageError"
             />
@@ -36,8 +36,8 @@
     <div class="main-content">
       <!-- 右侧图片（正常大小） -->
       <div v-if="selectedGame" class="main-image-container">
-        <img 
-          :src="`/image/main/${selectedGame.shortName}.jpg`" 
+        <img
+          :src="selectedGame.coverImage"
           :alt="selectedGame.displayName"
           class="main-image"
           @error="handleImageError"
@@ -95,9 +95,9 @@
         🎵
       </div>
       <!-- 隐藏的实际音频元素 -->
-      <audio 
-        ref="audioPlayer" 
-        :src="`/music/${selectedGame.shortName}.mp3`" 
+      <audio
+        ref="audioPlayer"
+        :src="`/music/${selectedGame.shortName}.mp3`"
         @play="handlePlay"
         @pause="handlePause"
         @ended="handlePause"
