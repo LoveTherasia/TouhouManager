@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, callWithErrorHandling } from 'vue'
+import { ref, computed } from 'vue'
 import * as gamesApi from '../api/games'
 
 export const useGamesStore = defineStore('games', () => {

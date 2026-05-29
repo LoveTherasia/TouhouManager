@@ -10,32 +10,38 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: Home,
+    meta: { transition: 'page' }
   },
   {
     path: '/games',
     name: 'Games',
-    component: Games
+    component: Games,
+    meta: { transition: 'page' }
   },
   {
     path: '/replays',
     name: 'Replays',
-    component: Replays
+    component: Replays,
+    meta: { transition: 'page' }
   },
   {
     path: '/statistics',
     name: 'Statistics',
-    component: Statistics
+    component: Statistics,
+    meta: { transition: 'page' }
   },
   {
     path: '/settings',
     name: 'Settings',
-    component: Settings
+    component: Settings,
+    meta: { transition: 'page' }
   },
   {
-    path:'/user/edit',
-    name:'UserEdit',
-    component:UserEdit
+    path: '/user/edit',
+    name: 'UserEdit',
+    component: UserEdit,
+    meta: { transition: 'page' }
   }
 ]
 

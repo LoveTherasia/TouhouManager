@@ -1,0 +1,77 @@
+:root {
+  /* Background */
+  --color-bg-deep: #07080d;
+  --color-bg-surface: #0f111a;
+  --color-bg-elevated: #161824;
+  --color-bg-glass: rgba(12, 14, 22, 0.78);
+  --color-bg-hover: rgba(255, 255, 255, 0.04);
+
+  /* Border */
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-border-active: rgba(212, 168, 83, 0.45);
+
+  /* Text */
+  --color-text-primary: #f0ece4;
+  --color-text-secondary: rgba(240, 236, 228, 0.65);
+  --color-text-muted: rgba(240, 236, 228, 0.38);
+
+  /* Accent */
+  --color-accent-crimson: #c41e3a;
+  --color-accent-crimson-soft: rgba(196, 30, 58, 0.18);
+  --color-accent-gold: #d4a853;
+  --color-accent-gold-soft: rgba(212, 168, 83, 0.15);
+  --color-accent-indigo: #5b6fd9;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+
+  /* Typography */
+  --font-display: 'Noto Serif SC', 'Georgia', serif;
+  --font-body: 'Noto Sans SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-hero: clamp(2rem, 4vw, 3.5rem);
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadow */
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-glow-crimson: 0 0 48px rgba(196, 30, 58, 0.2);
+  --shadow-glow-gold: 0 0 32px rgba(212, 168, 83, 0.15);
+
+  /* Layout */
+  --sidebar-width: 220px;
+  --library-width: 200px;
+  --library-thumb-width: 132px;
+  --library-thumb-height: 168px;
+  --feature-panel-width: 260px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms var(--ease-out);
+  --transition-base: 250ms var(--ease-out);
+  --transition-slow: 450ms var(--ease-out);
+}

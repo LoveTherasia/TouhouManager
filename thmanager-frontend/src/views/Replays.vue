@@ -1,127 +1,89 @@
 <template>
-  <div class="replays-page">
-    <div class="card">
-      <div class="card-header">
-        <span>Replay 管理</span>
-        <div class="header-actions">
-          <select v-model="filterGame" class="custom-select" style="width: 200px; margin-right: 10px;">
-            <option value="">筛选游戏</option>
-            <option
-              v-for="game in gamesStore.installedGames"
-              :key="game.id"
-              :value="game.id"
-            >{{ game.displayName }}</option>
-          </select>
-          <button class="primary-button" @click="handleScan">
-            🔄 扫描新 Replay
-          </button>
-        </div>
+  <AppShell title="Replay 管理" subtitle="浏览与管理录像文件">
+    <template #headerActions>
+      <select v-model="filterGame" class="filter-select">
+        <option value="">全部游戏</option>
+        <option v-for="game in gamesStore.games" :key="game.id" :value="game.id">
+          {{ getGameDisplayName(game) }}
+        </option>
+      </select>
+      <AppButton size="sm" :loading="scanning" @click="handleScan">扫描新 Replay</AppButton>
+    </template>
+
+    <AppLoading v-if="loading && !replaysStore.replays.length" />
+    <AppEmpty v-else-if="!filteredReplays.length" text="暂无 Replay 数据" />
+
+    <AppCard v-else :flush="true">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>游戏</th>
+              <th>难度</th>
+              <th>角色</th>
+              <th>分数</th>
+              <th>关卡</th>
+              <th>日期</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="replay in filteredReplays" :key="replay.id">
+              <td>{{ replay.id }}</td>
+              <td>{{ getGameName(replay.gameId) }}</td>
+              <td>{{ replay.difficultyDisplay || replay.difficulty }}</td>
+              <td>{{ replay.character || '-' }}</td>
+              <td class="score-cell">{{ formatScore(replay.totalScore) }}</td>
+              <td>{{ replay.reachedStageNumber || '-' }}</td>
+              <td>{{ formatDate(replay.gameDate) }}</td>
+              <td>
+                <AppButton variant="ghost" size="sm" @click="handleDelete(replay)">删除</AppButton>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="card-body">
-        <div v-if="loading" class="loading">
-          加载中...
-        </div>
-        <div v-else-if="replays.length === 0" class="empty">
-          暂无 Replay 数据
-        </div>
-        <div v-else class="replays-table">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>游戏</th>
-                <th>难度</th>
-                <th>角色</th>
-                <th>分数</th>
-                <th>日期</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="replay in filteredReplays" :key="replay.id">
-                <td>{{ replay.id }}</td>
-                <td>{{ getGameName(replay.gameId) }}</td>
-                <td>{{ replay.difficulty }}</td>
-                <td>{{ replay.character }}</td>
-                <td>{{ replay.score.toLocaleString() }}</td>
-                <td>{{ formatDate(replay.date) }}</td>
-                <td class="actions">
-                  <button class="action-button" @click="handleView(replay)">
-                    查看
-                  </button>
-                  <button class="action-button delete" @click="handleDelete(replay)">
-                    删除
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+    </AppCard>
+  </AppShell>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useReplaysStore } from '../stores/replays'
-import { useGamesStore } from '../stores/games'
+import { useReplaysStore } from '@/stores/replays'
+import { useGamesStore } from '@/stores/games'
+import { formatScore, getGameDisplayName } from '@/utils/format'
+import AppShell from '@/components/layout/AppShell.vue'
+import AppCard from '@/components/ui/AppCard.vue'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppLoading from '@/components/ui/AppLoading.vue'
+import AppEmpty from '@/components/ui/AppEmpty.vue'
 
 const replaysStore = useReplaysStore()
 const gamesStore = useGamesStore()
-
 const loading = ref(false)
+const scanning = ref(false)
 const filterGame = ref('')
 
-const replays = computed(() => replaysStore.replays)
-
-const filteredReplays = computed(() => {
-  let filtered = replays.value
-  if (filterGame.value) {
-    filtered = filtered.filter(replay => replay.gameId === filterGame.value)
-  }
-  // 按照gameId排序
-  return filtered.sort((a, b) => a.gameId - b.gameId)
+const gameNameMap = computed(() => {
+  const map = {}
+  gamesStore.games.forEach(g => { map[g.id] = getGameDisplayName(g) })
+  return map
 })
 
-const getGameName = (gameId) => {
-  const gameMap = {
-    1: '东方红魔乡',
-    2: '东方妖妖梦',
-    3: '东方永夜抄',
-    4: '东方花映冢',
-    5: '东方文花帖',
-    6: '东方风神录',
-    7: '东方地灵殿',
-    8: '东方星莲船',
-    9: '东方神灵庙',
-    10: '东方辉针城',
-    11: '东方绀珠传',
-    12: '东方天空璋',
-    13: '东方鬼形兽',
-    14: '东方虹龙洞',
-    15: '东方兽王园'
-  }
-  return gameMap[gameId] || '未知游戏'
-}
+const getGameName = (id) => gameNameMap.value[id] || '未知游戏'
+const formatDate = (d) => d ? String(d).split('T')[0] : '-'
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleString()
-}
+const filteredReplays = computed(() => {
+  let list = replaysStore.replays
+  if (filterGame.value) list = list.filter(r => r.gameId === Number(filterGame.value))
+  return list
+})
 
 const handleScan = async () => {
-  loading.value = true
-  try {
-    await replaysStore.scanReplays()
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleView = (replay) => {
-  console.log('查看 Replay:', replay)
-  // 实现查看 Replay 的逻辑
+  scanning.value = true
+  try { await replaysStore.scanNewReplays() }
+  finally { scanning.value = false }
 }
 
 const handleDelete = async (replay) => {
@@ -133,8 +95,7 @@ const handleDelete = async (replay) => {
 onMounted(async () => {
   loading.value = true
   try {
-    await gamesStore.fetchGames()
-    await replaysStore.fetchReplays()
+    await Promise.all([gamesStore.fetchGames(), replaysStore.fetchReplays()])
   } finally {
     loading.value = false
   }
@@ -142,169 +103,37 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.replays-page {
-  padding: 20px;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  color: #fff;
-}
-
-.card {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.card-header span {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.custom-select {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 14px;
+.filter-select {
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
   outline: none;
-  transition: all 0.3s ease;
 }
+.filter-select option { background: var(--color-bg-elevated); }
 
-.custom-select:hover {
-  border-color: rgba(64, 158, 255, 0.5);
-  background: rgba(255, 255, 255, 0.15);
-}
+.table-wrap { overflow-x: auto; }
 
-.custom-select option {
-  background: #1a1a2e;
-  color: #fff;
-}
-
-.primary-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
-}
-
-.primary-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
-}
-
-.card-body {
-  padding: 20px;
-}
-
-.loading, .empty {
-  text-align: center;
-  padding: 40px 0;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.replays-table {
-  overflow-x: auto;
-}
-
-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
-  border-spacing: 0;
+  font-size: var(--text-sm);
 }
-
-th, td {
-  padding: 12px 15px;
+.data-table th {
+  padding: var(--space-3) var(--space-4);
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-th {
-  background: rgba(255, 255, 255, 0.05);
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--color-border);
 }
-
-tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+.data-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-button {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.action-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-.action-button.delete {
-  background: rgba(255, 87, 34, 0.2);
-  border-color: rgba(255, 87, 34, 0.4);
-}
-
-.action-button.delete:hover {
-  background: rgba(255, 87, 34, 0.3);
-  border-color: rgba(255, 87, 34, 0.6);
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .custom-select {
-    width: 150px;
-  }
-  
-  th, td {
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-}
+.data-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+.score-cell { font-family: var(--font-mono); font-weight: 600; color: var(--color-accent-gold) !important; }
 </style>
