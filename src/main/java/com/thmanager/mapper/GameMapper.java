@@ -18,7 +18,7 @@ public interface GameMapper extends BaseMapper<Game> {
 
     @Update("UPDATE games SET game_number = #{gameNumber}, title_ja = #{titleJa}, title_zh = #{titleCn}, " +
             "title_en = #{titleEn}, install_path = #{installPath}, exe_name = #{exeName}, " +
-            "replay_folder = #{replayFolder}, cover_image = #{coverImage}, " +
+            "replay_folder = #{replayFolder}, cover_image = #{coverImage}, description = #{description}, " +
             "total_play_time_seconds = #{totalPlayTimeSeconds}, last_played = #{lastPlayed}, " +
             "is_installed = #{installed} WHERE id = #{id}")
     int updateGame(Game game);

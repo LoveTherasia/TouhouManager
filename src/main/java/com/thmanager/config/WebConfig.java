@@ -24,12 +24,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 配置图片资源路径 - 指向前端项目中的image文件夹
+        // 配置图片资源路径
+        String imageDir = System.getProperty("user.dir") + "\\thmanager-frontend\\image\\";
         registry.addResourceHandler("/image/**")
-                .addResourceLocations("file:thmanager-frontend/image/");
+                .addResourceLocations("file:" + imageDir);
 
-        // 配置音乐资源路径 - 指向前端项目中的music文件夹
+        // 配置音乐资源路径
+        String musicDir = System.getProperty("user.dir") + "\\thmanager-frontend\\public\\music\\";
         registry.addResourceHandler("/music/**")
-                .addResourceLocations("file:thmanager-frontend/public/music/");
+                .addResourceLocations("file:" + musicDir);
     }
 }

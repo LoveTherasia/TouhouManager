@@ -78,6 +78,12 @@ public class Game {
     private String coverImage;
 
     /**
+     * 游戏简介，简短剧情描述（50字左右）
+     */
+    @TableField("description")
+    private String description;
+
+    /**
      * 总游玩时长（单位：秒）
      */
     @TableField("total_play_time_seconds")

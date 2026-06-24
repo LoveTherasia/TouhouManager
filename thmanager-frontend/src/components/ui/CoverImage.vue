@@ -60,8 +60,8 @@ const resolvedSrc = computed(() => (errored.value ? props.fallback : props.src) 
 const frameStyle = computed(() => {
   const ratioByVariant = {
     card: '1 / 1',
-    hero: '3 / 4',
-    banner: '16 / 9',
+    hero: '1 / 1',
+    banner: props.aspectRatio,
     fill: props.aspectRatio
   }
   const style = { aspectRatio: ratioByVariant[props.variant] || props.aspectRatio }
@@ -147,14 +147,12 @@ const onError = () => { errored.value = true }
 
 .cover-image--hero {
   width: clamp(220px, 26vw, 360px);
-  aspect-ratio: 1 / 1;
   border-radius: var(--radius-lg, 16px);
   box-shadow: var(--shadow-panel, 0 8px 32px rgba(0, 0, 0, 0.45));
 }
 
 .cover-image--banner {
   width: 100%;
-  aspect-ratio: 16 / 9;
   border-radius: var(--radius-md, 10px);
 }
 

@@ -7,9 +7,10 @@ CREATE TABLE IF NOT EXISTS games (
                                      title_en TEXT,                        -- 英文缩写（如 EoSD）
                                      install_path TEXT,                    -- 游戏安装路径
                                      exe_name TEXT,                        -- 可执行文件名（如 th06.exe）
-                                     replay_folder TEXT,                   -- replay文件夹路径
-                                     cover_image TEXT,                     -- 封面图片路径（预留）
-                                     total_play_time_seconds INTEGER DEFAULT 0,  -- 总游玩时间（秒）
+                                      replay_folder TEXT,                   -- replay文件夹路径
+                                      cover_image TEXT,                     -- 封面图片路径（预留）
+                                      description TEXT,                     -- 游戏简介/剧情描述
+                                      total_play_time_seconds INTEGER DEFAULT 0,  -- 总游玩时间（秒）
                                      last_played TIMESTAMP,                -- 最后游玩时间
                                      is_installed BOOLEAN DEFAULT 0,       -- 是否已安装
                                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -32,21 +33,21 @@ CREATE INDEX IF NOT EXISTS idx_sessions_game_id ON play_sessions(game_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON play_sessions(start_time);
 
 -- 插入东方整数作基础数据（TH06-TH19）
-INSERT OR IGNORE INTO games (game_number, title_ja, title_zh, title_en, exe_name) VALUES
-(6, '東方紅魔郷', '东方红魔乡', 'EoSD', 'th06.exe'),
-(7, '東方妖々夢', '东方妖妖梦', 'PCB', 'th07.exe'),
-(8, '東方永夜抄', '东方永夜抄', 'IN', 'th08.exe'),
-(9, '東方花映塚', '东方花映冢', 'PoFV', 'th09.exe'),
-(10, '東方風神録', '东方风神录', 'MoF', 'th10.exe'),
-(11, '東方地霊殿', '东方地灵殿', 'SA', 'th11.exe'),
-(12, '東方星蓮船', '东方星莲船', 'UFO', 'th12.exe'),
-(13, '東方神霊廟', '东方神灵庙', 'TD', 'th13.exe'),
-(14, '東方輝針城', '东方辉针城', 'DDC', 'th14.exe'),
-(15, '東方紺珠伝', '东方绀珠传', 'LoLK', 'th15.exe'),
-(16, '東方天空璋', '东方天空璋', 'HSiFS', 'th16.exe'),
-(17, '東方鬼形獣', '东方鬼形兽', 'WBaWC', 'th17.exe'),
-(18, '東方虹龍洞', '东方虹龙洞', 'UM', 'th18.exe'),
-(19, '東方獣王園', '东方兽王园', 'UDoALG', 'th19.exe');
+INSERT OR IGNORE INTO games (game_number, title_ja, title_zh, title_en, exe_name, description) VALUES
+(6, '東方紅魔郷', '东方红魔乡', 'EoSD', 'th06.exe', '博丽灵梦调查红魔馆的异变，面对吸血鬼姐妹蕾米莉亚和芙兰朵露，在夏日幻想乡展开弹幕对决'),
+(7, '東方妖々夢', '东方妖妖梦', 'PCB', 'th07.exe', '春雪异变笼罩幻想乡，灵梦与魔理沙深入冥界，揭开西行寺幽幽子与八云紫背后的秘密'),
+(8, '東方永夜抄', '东方永夜抄', 'IN', 'th08.exe', '不老的不夜城，永远亭的公主与月之使者卷入永恒之夜，众角色在迷途竹林中探索真相'),
+(9, '東方花映塚', '东方花映冢', 'PoFV', 'th09.exe', '幻想乡被大量花朵覆盖，亡灵与妖怪争夺樱花树下的春度，在生死交错的弹幕中展开对决'),
+(10, '東方風神録', '东方风神录', 'MoF', 'th10.exe', '山上的神社搬来外界神明，守矢一族与八坂神奈子试图收集信仰，引发幻想乡的信仰之争'),
+(11, '東方地霊殿', '东方地灵殿', 'SA', 'th11.exe', '地底灼热地狱中怨灵暴走，古明地觉与古明地恋姐妹之间的情感纠葛在地下世界引发异变'),
+(12, '東方星蓮船', '东方星莲船', 'UFO', 'th12.exe', '神奇的宝船出现在天空之上，揭秘被封印的魔法与僧侣，在云层之上展开神秘旅程'),
+(13, '東方神霊廟', '东方神灵庙', 'TD', 'th13.exe', '三角圣域中的仙人复归，道士宫古芳香与霍青娥展开的复活亡灵计划导致大量魂魄彷徨'),
+(14, '東方輝針城', '东方辉针城', 'DDC', 'th14.exe', '小人族企图利用万宝槌的力量向人类复仇，在无数弹幕的逃亡与战斗中逐渐揭开真相'),
+(15, '東方紺珠伝', '东方绀珠传', 'LoLK', 'th15.exe', '月之都的入侵计划展开，纯狐与月之民之间的千年恩怨在永恒的战斗中被揭露与解明'),
+(16, '東方天空璋', '东方天空璋', 'HSiFS', 'th16.exe', '四季异变使幻想乡陷入混乱，三位妖精与隐岐奈展开抗争，自然之力的冲突与调和'),
+(17, '東方鬼形獣', '东方鬼形兽', 'WBaWC', 'th17.exe', '畜生界发生剧烈动荡，动物灵与埴轮灵的对抗引发地狱变化，信仰与灵魂的较量'),
+(18, '東方虹龍洞', '东方虹龙洞', 'UM', 'th18.exe', '神秘卡片在幻想乡流通，大天狗饭纲丸龙策划的阴谋在虹龙洞展开，收藏与战斗交织'),
+(19, '東方獣王園', '东方兽王园', 'UDoALG', 'th19.exe', '猿田彦神计划征服幻想乡，召唤各类野兽灵魂进行驯服，展开全新的弹幕之战');
 
 
 -- Replay数据表（完整版）

@@ -1,9 +1,32 @@
 import { mockData } from './server.js'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
+const IMAGE_DIR = join(__dirname, '..', 'image')
+const MUSIC_DIR = join(__dirname, '..', 'public', 'music')
 
 function sendJson(res, data, status = 200) {
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json')
   res.end(JSON.stringify(data))
+}
+
+function sendFile(res, filePath) {
+  try {
+    const data = readFileSync(filePath)
+    const ext = filePath.split('.').pop().toLowerCase()
+    const types = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+      webp: 'image/webp', svg: 'image/svg+xml',
+      mp3: 'audio/mpeg', wav: 'audio/wav'
+    }
+    res.statusCode = 200
+    res.setHeader('Content-Type', types[ext] || 'application/octet-stream')
+    res.end(data)
+  } catch {
+    res.statusCode = 404
+    res.end('Not Found')
+  }
 }
 
 function readBody(req) {
@@ -81,6 +104,18 @@ export function mockPlugin() {
         // Images
         if (url === '/api/images' && method === 'GET') {
           return sendJson(res, mockData.images)
+        }
+
+        // Images (static files)
+        if (url.startsWith('/image/') && method === 'GET') {
+          const fileName = url.replace('/image/', '')
+          return sendFile(res, join(IMAGE_DIR, fileName))
+        }
+
+        // Music (static files)
+        if (url.startsWith('/music/') && method === 'GET') {
+          const fileName = url.replace('/music/', '')
+          return sendFile(res, join(MUSIC_DIR, fileName))
         }
 
         next()

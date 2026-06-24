@@ -11,7 +11,7 @@ import java.nio.file.Paths;
  */
 public final class GameCoverResolver {
 
-    private static final Path COVER_ROOT = Paths.get("thmanager-frontend", "image", "cover");
+    private static final Path COVER_ROOT = Paths.get(System.getProperty("user.dir"), "thmanager-frontend", "image", "cover");
     private static final String DEFAULT_COVER = "/image/main/default.svg";
 
     private GameCoverResolver() {

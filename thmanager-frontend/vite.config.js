@@ -2,8 +2,14 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import { mockPlugin } from './mock/plugin.js'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 
-const useMock = false // 使用 mock 数据
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+const useMock = process.env.USE_MOCK === 'true'
 
 const cloudApiTarget = 'http://121.43.124.131:8080'
 const localApiTarget = 'http://localhost:8080'
@@ -42,9 +48,6 @@ export default defineConfig({
   },
   server: {
     port: 3001,
-    proxy: useMock ? {
-      '/image': { target: localApiTarget, changeOrigin: true },
-      '/music': { target: localApiTarget, changeOrigin: true }
-    } : devProxy
+    proxy: useMock ? undefined : devProxy
   }
 })
