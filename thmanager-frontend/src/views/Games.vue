@@ -14,7 +14,6 @@
         v-for="game in gamesStore.games"
         :key="game.id"
         class="game-card"
-        @click="handleCardClick(game)"
         @contextmenu.prevent="showContextMenu($event, game)"
       >
         <div class="game-card__cover">
@@ -82,7 +81,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
 import { useGamesStore } from '@/stores/games'
 import { getGameDisplayName, getGameShortName, getGamePlayTimeMinutes, getGameCoverUrl, formatPlayTime } from '@/utils/format'
 import AppShell from '@/components/layout/AppShell.vue'
@@ -93,7 +91,6 @@ import AppEmpty from '@/components/ui/AppEmpty.vue'
 import AppModal from '@/components/ui/AppModal.vue'
 import CoverImage from '@/components/ui/CoverImage.vue'
 
-const router = useRouter()
 const gamesStore = useGamesStore()
 
 const contextMenu = ref({ visible: false, x: 0, y: 0, game: null })
@@ -102,10 +99,6 @@ const pathModalGame = ref(null)
 const pathInputValue = ref('')
 const pathInput = ref(null)
 const settingPath = ref(false)
-
-const handleCardClick = (game) => {
-  router.push(`/settings?gameId=${game.id}`)
-}
 
 const showContextMenu = (event, game) => {
   contextMenu.value = {
