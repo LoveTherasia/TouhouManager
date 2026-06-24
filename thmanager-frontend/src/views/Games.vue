@@ -14,7 +14,8 @@
         v-for="game in gamesStore.games"
         :key="game.id"
         class="game-card"
-        @click="router.push(`/settings?gameId=${game.id}`)"
+        @click="handleCardClick(game)"
+        @contextmenu.prevent="showContextMenu($event, game)"
       >
         <div class="game-card__cover">
           <CoverImage
@@ -38,11 +39,49 @@
         </div>
       </div>
     </div>
+
+    <!-- 右键菜单 -->
+    <Teleport to="body">
+      <div
+        v-if="contextMenu.visible"
+        class="context-menu"
+        :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
+        @click.stop
+      >
+        <div class="context-menu__item" @click="openPathModal">
+          <span class="context-menu__icon">📁</span>
+          <span>设置安装路径</span>
+        </div>
+        <div v-if="contextMenu.game?.installPath" class="context-menu__item context-menu__item--danger" @click="handleClearPath">
+          <span class="context-menu__icon">🗑️</span>
+          <span>清除安装路径</span>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 设置路径弹窗 -->
+    <AppModal v-model="pathModalVisible" :title="`设置路径 - ${pathModalGame?.displayName || pathModalGame?.titleCn || ''}`">
+      <div class="path-modal-content">
+        <p class="path-modal-desc">请输入游戏的安装目录完整路径</p>
+        <input
+          ref="pathInput"
+          v-model="pathInputValue"
+          type="text"
+          class="path-modal-input"
+          placeholder="例如: D:\Games\Touhou\th06"
+          @keyup.enter="confirmSetPath"
+        />
+        <div class="path-modal-actions">
+          <AppButton variant="ghost" @click="pathModalVisible = false">取消</AppButton>
+          <AppButton :loading="settingPath" @click="confirmSetPath">确认</AppButton>
+        </div>
+      </div>
+    </AppModal>
   </AppShell>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGamesStore } from '@/stores/games'
 import { getGameDisplayName, getGameShortName, getGamePlayTimeMinutes, getGameCoverUrl, formatPlayTime } from '@/utils/format'
@@ -51,12 +90,81 @@ import AppButton from '@/components/ui/AppButton.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppLoading from '@/components/ui/AppLoading.vue'
 import AppEmpty from '@/components/ui/AppEmpty.vue'
+import AppModal from '@/components/ui/AppModal.vue'
 import CoverImage from '@/components/ui/CoverImage.vue'
 
 const router = useRouter()
 const gamesStore = useGamesStore()
 
-onMounted(() => gamesStore.fetchGames())
+const contextMenu = ref({ visible: false, x: 0, y: 0, game: null })
+const pathModalVisible = ref(false)
+const pathModalGame = ref(null)
+const pathInputValue = ref('')
+const pathInput = ref(null)
+const settingPath = ref(false)
+
+const handleCardClick = (game) => {
+  router.push(`/settings?gameId=${game.id}`)
+}
+
+const showContextMenu = (event, game) => {
+  contextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    game
+  }
+}
+
+const hideContextMenu = () => {
+  contextMenu.value.visible = false
+}
+
+const openPathModal = () => {
+  hideContextMenu()
+  pathModalGame.value = contextMenu.value.game
+  pathInputValue.value = contextMenu.value.game?.installPath || ''
+  pathModalVisible.value = true
+  nextTick(() => {
+    pathInput.value?.focus()
+  })
+}
+
+const confirmSetPath = async () => {
+  if (!pathModalGame.value) return
+  
+  settingPath.value = true
+  try {
+    await gamesStore.updateGamePath(pathModalGame.value.id, pathInputValue.value.trim())
+    await gamesStore.fetchGames()
+    pathModalVisible.value = false
+  } catch (error) {
+    console.error('Failed to update game path:', error)
+  } finally {
+    settingPath.value = false
+  }
+}
+
+const handleClearPath = async () => {
+  hideContextMenu()
+  if (!contextMenu.value.game) return
+
+  try {
+    await gamesStore.updateGamePath(contextMenu.value.game.id, '')
+    await gamesStore.fetchGames()
+  } catch (error) {
+    console.error('Failed to clear game path:', error)
+  }
+}
+
+onMounted(() => {
+  gamesStore.fetchGames()
+  document.addEventListener('click', hideContextMenu)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', hideContextMenu)
+})
 </script>
 
 <style scoped>
@@ -119,5 +227,92 @@ onMounted(() => gamesStore.fetchGames())
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 180px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  padding: var(--space-2);
+  animation: menuFadeIn 0.15s ease;
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.context-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  transition: background var(--transition-fast);
+}
+
+.context-menu__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.context-menu__item--danger {
+  color: var(--color-accent-crimson);
+}
+
+.context-menu__item--danger:hover {
+  background: rgba(196, 30, 58, 0.12);
+}
+
+.context-menu__icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Path Modal */
+.path-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.path-modal-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.path-modal-input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-glass);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-mono);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.path-modal-input:focus {
+  border-color: var(--color-border-active);
+}
+
+.path-modal-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.path-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 </style>
